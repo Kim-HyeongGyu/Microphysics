@@ -9,11 +9,13 @@ Repository for Microphysics II class in KNU.
     |  ├- driver.f90        # code for box model.
     |  └- microphysics.f90  # Main code (e.g. module, ...)
     └- test
+       ├- driver.f90       
+       └- microphysics.f90 
 ```
 
 ## Tool
 - Programming language : `Fortran90`
-- Casing : ???
+- Code notation : ???
 
 ## Schedule
 - [  ] Meeting (2020.03.26 15:00~16:00)
