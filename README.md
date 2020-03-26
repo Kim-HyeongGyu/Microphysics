@@ -18,5 +18,5 @@ Repository for Microphysics II class in KNU.
 - Code notation : ???
 
 ## Schedule
-- [  ] Meeting (2020.03.26 15:00~16:00)
+- [ ] Meeting (2020.03.26 15:00~16:00)
 
