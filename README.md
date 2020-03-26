@@ -1,7 +1,7 @@
 # Microphysics
 Repository for Microphysics II class in KNU.
 
-## structure
+## Structure
 ```
 ├-- doc    # documentation for box model.
 └-- src    # source code
