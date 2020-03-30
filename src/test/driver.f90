@@ -9,8 +9,10 @@ implicit none
     integer, parameter :: nt = 100  ! TODO! nt = t_final/dt
     real    :: ztop, zbottom = 0.   ! default bottom [km]
     real    :: GRAVITY, PI
+    real    :: T_sfc = 293.15       ! [K]
     real, dimension(:), allocatable :: z_full, z_half
     real, dimension(:), allocatable :: T, q, w
+    real, dimension(:,:), allocatable :: Tout
     ! real, dimension(n+1) :: array_foreward, array_backward
     character(len=20) :: grid_dz, diff_method
     namelist /setup_list/ nz, ztop, grid_dz, diff_method
@@ -31,7 +33,7 @@ implicit none
     ! close (92)
 
     T = (/ (I+273, I = 20,1,-1) /)  ! lapse rate 1K/km
-    w = (/ (I, I = 1,40,2) /)
+    w = sin( (/ (I, I = 1,40,2) /) / 10. )
 
     print*, "========= Setup variables ========="
     print*, "Num of z-grid   : ", nz
@@ -46,12 +48,21 @@ implicit none
     call compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half)
 
     ! time integration
-    ! call compute_advection(w, T, nt, diff_method)
+    allocate(Tout(nt,nz))
+    call compute_advection(w, T, T_sfc, nt, nz, z_full, diff_method, Tout)
 
     ! output result
+    open(unit = 30, file = "output.txt")
+    ! open(unit = 30, file = "output.dat", form='formatted', &
+    !      status = "replace", access='sequential', recl=4) 
+    do i = 1, 100
+        write(30,*) Tout(i,:)
+    end do
+    close(30)
 
     ! deallocate storage
     if (allocated(z_full)) deallocate(z_full)
     if (allocated(z_half)) deallocate(z_half)
+    if (allocated(Tout))   deallocate(Tout)
 
 end program driver
