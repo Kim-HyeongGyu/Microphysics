@@ -1,18 +1,23 @@
 module vert_coordinate_mod
 contains
-    subroutine compute_vert_coord(ztop, zbottom, nz, grid_dz, dz)
+    subroutine compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half)
     implicit none
-    integer, intent(in) :: nz                ! [m]
-    real, intent(in)    :: ztop, zbottom     ! [km]
-    real, intent(out), dimension(nz) :: dz
-    character(len=*), intent(in)     :: grid_dz
-    integer         :: k
-    real, parameter :: s = 1.05
-    real :: calc_ztop
+    integer, intent(in) :: nz                ! Num of z_full
+    real,    intent(in) :: ztop, zbottom     ! [km]
+    character(len=*), intent(in)       :: grid_dz
+    real, intent(out), dimension(nz)   :: z_full
+    real, intent(out), dimension(nz+1) :: z_half
+    integer :: k
+    real, dimension(nz) :: dz   ! delta z for z_half
 
     select case (grid_dz)
         case ("constant_grid")
             dz = (ztop - zbottom) * 1000. / nz
+            z_half(1) = zbottom * 1000.
+            do k = 1, nz
+                z_half(k+1) = z_half(k) + dz(k)
+            end do
+            z_full = z_half(1:nz) + dz/2.
         case ("stretching_grid")
             print*, "TODO! need to work..."
             stop
@@ -24,13 +29,8 @@ contains
         case default
             print*, "Not setup grid_dz option. &
                      please check input.nml"
+            stop
     end select
-    ! if (grid_dz == "constant_grid") then
-    !     dz = (ztop - zbottom) * 1000. / nz
-    ! end if
-    !
-    ! if (grid_dz == "stretching_grid") then
-    !     
-    ! end if
+
     end subroutine compute_vert_coord
 end module vert_coordinate_mod
