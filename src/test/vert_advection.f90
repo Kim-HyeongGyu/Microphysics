@@ -8,8 +8,8 @@ contains
     implicit none
     integer, intent(in)    :: nt
     character(len=*), intent(in) :: diff_method
-    integer :: n, k, nz, dt = 100
-    real    :: dC_dz, zbottom = 0.
+    integer :: n, k, nz, dt = 1      ! CFL condition (mu=w*dt/dz)
+    real    :: dC_dz, dz, zbottom = 0.
     real    :: sfc_C    ! for surface effect (radiation, etc ...)
     real    :: flux_minus, flux_plus   ! for finite volume method
     real, dimension(nz)    :: w_full, initC, z_full
@@ -50,13 +50,20 @@ contains
             end do
         case ("finite_volume")
             do n = 1, nt-1
-                do k = 1, nz
+                ! TODO: Need to discuss BC
+                ! Boundary condition
+                k = 1
+                flux_minus = sfc_C *w_half(k)*dt    ! equal zero
+                flux_plus  = C(n,k)*w_half(k+1)*dt
+                dz         = z_half(k+1) - z_half(k)
+                C(n+1,k)   = sfc_C+(flux_minus-flux_plus)/dz
+
+                do k = 2, nz
                     flux_minus = C(n,k-1)*w_half(k)*dt
                     flux_plus  = C(n,k  )*w_half(k+1)*dt
-                    C(n+1,k)   = C(n,k)+(flux_minus-flux_plus)/z_half(k)
+                    dz         = z_half(k+1) - z_half(k)
+                    C(n+1,k)   = C(n,k)+(flux_minus-flux_plus)/dz
                 end do
-                ! TODO: Boundary condition
-                ! Bottom boundary make -inf problem.
             end do
         case default
             print*, "Not setup diff_method option. &
