@@ -1,18 +1,19 @@
 module advection_mod
 contains
     subroutine compute_advection(w_full, initC, sfc_C, nt, nz, &
-                                   z_full, diff_method, C)
+                                 z_full, z_half, diff_method, C)
     ! Vertical advection = w * (dC/dz)
     ! diff_method: 1. Foward/Centerd finite difference
     !              2. Finite volume method
     implicit none
     integer, intent(in)    :: nt
     character(len=*), intent(in) :: diff_method
-    integer :: n, k, nz, dt = 20
+    integer :: n, k, nz, dt = 100
     real    :: dC_dz, zbottom = 0.
     real    :: sfc_C    ! for surface effect (radiation, etc ...)
+    real    :: flux_minus, flux_plus   ! for finite volume method
     real, dimension(nz)    :: w_full, initC, z_full
-    real, dimension(nz+1)  :: w_half
+    real, dimension(nz+1)  :: w_half, z_half
     real, dimension(nt,nz) :: C
 
     ! Initial value
@@ -48,14 +49,19 @@ contains
                           ( z_full(nz) - z_full(nz-1) )
             end do
         case ("finite_volume")
-            print*, "TODO! need to work..."
-            stop
-            ! flux_minus = C(j-1)*w(j-0.5)*dt
-            ! flux_plus  = C(j  )*w(j+0.5)*dt
-            ! C(j,n+1)   = C(j,n)+(flux_minus-flux_plus)
+            do n = 1, nt-1
+                do k = 1, nz
+                    flux_minus = C(n,k-1)*w_half(k)*dt
+                    flux_plus  = C(n,k  )*w_half(k+1)*dt
+                    C(n+1,k)   = C(n,k)+(flux_minus-flux_plus)/z_half(k)
+                end do
+                ! TODO: Boundary condition
+                ! Bottom boundary make -inf problem.
+            end do
         case default
             print*, "Not setup diff_method option. &
                      please check input.nml"
+            stop
     end select
 
     end subroutine compute_advection

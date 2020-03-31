@@ -2,5 +2,5 @@
     nz      = 20,               ! num of grid
     ztop    = 16,               ! Top of atmosphere [km]
     grid_dz = "constant_grid"   ! "constant_grid", "stretching_grid"
-    diff_method = "finite_difference"   ! "finite_volume"
+    diff_method = "finite_difference"   ! "finite_difference", "finite_volume"
 /

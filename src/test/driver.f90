@@ -49,12 +49,13 @@ implicit none
 
     ! time integration
     allocate(Tout(nt,nz))
-    call compute_advection(w, T, T_sfc, nt, nz, z_full, diff_method, Tout)
+    call compute_advection(w, T, T_sfc, nt, nz, z_full, z_half, &
+                           diff_method, Tout)
 
     ! output result
     open(unit = 30, file = "output.txt")
-    ! open(unit = 30, file = "output.dat", form='formatted', &
-    !      status = "replace", access='sequential', recl=4) 
+    ! open(unit = 30, file = "output.dat", form='unformatted', &
+    !      status = "unknown", access='direct', recl=4*nz) 
     do i = 1, 100
         write(30,*) Tout(i,:)
     end do
