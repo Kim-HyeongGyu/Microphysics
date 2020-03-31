@@ -9,7 +9,7 @@ implicit none
     integer, parameter :: nt = 100  ! TODO! nt = t_final/dt
     real    :: ztop, zbottom = 0.   ! default bottom [km]
     real    :: GRAVITY, PI
-    real    :: T_sfc = 293.15       ! [K]
+    real    :: T_sfc
     real, dimension(:), allocatable :: z_full, z_half
     real, dimension(:), allocatable :: T, q, w
     real, dimension(:,:), allocatable :: Tout
@@ -32,6 +32,7 @@ implicit none
     ! read  (92,rec=1) w
     ! close (92)
 
+    T_sfc = 293.15       ! [K]
     T = (/ (I+273, I = 20,1,-1) /)  ! lapse rate 1K/km
     w = sin( (/ (I, I = 1,40,2) /) / 10. )
 

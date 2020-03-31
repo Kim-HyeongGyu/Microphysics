@@ -3,7 +3,7 @@
 ; Tout = fbindirread("./output.dat", 0, (/100,20/), "float")
 Tout = asciiread("./output.txt", -1, "float")
 Tout:= reshape(Tout, (/100,20/))
-printVarSummary(Tout)
+; printVarSummary(Tout)
 ; print(Tout(:2,:))
 ; printMinMax(Tout(:2,:), False)
 ; exit
