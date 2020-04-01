@@ -5,14 +5,14 @@ use         advection_mod, only: compute_advection
 implicit none
 
     ! Set variables
-    integer :: nz, it, i 
+    integer :: nz, it, i , k
     integer, parameter :: nt = 100  ! TODO! nt = t_final/dt
     real    :: ztop, zbottom = 0.   ! default bottom [km]
     real    :: GRAVITY, PI
-    real    :: T_sfc
+    real    :: T_sfc, q_sfc
     real, dimension(:), allocatable :: z_full, z_half
     real, dimension(:), allocatable :: T, q, w
-    real, dimension(:,:), allocatable :: Tout
+    real, dimension(:,:), allocatable :: Tout, qout
     ! real, dimension(n+1) :: array_foreward, array_backward
     character(len=20) :: grid_dz, diff_method
     namelist /setup_list/ nz, ztop, grid_dz, diff_method
@@ -35,6 +35,10 @@ implicit none
     T_sfc = 293.15       ! [K]
     T = (/ (I+273, I = 20,1,-1) /)  ! lapse rate 1K/km
     w = sin( (/ (I, I = 1,40,2) /) / 10. )
+    w = w*0. + 2.
+    q_sfc = 0.           ! #num
+    q = w*0. + 10.
+    ! q(5) = 10.
 
     print*, "========= Setup variables ========="
     print*, "Num of z-grid   : ", nz
@@ -49,9 +53,22 @@ implicit none
     call compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half)
 
     ! time integration
-    allocate(Tout(nt,nz))
+    allocate(Tout(nt,nz), qout(nt,nz))
     call compute_advection(w, T, T_sfc, nt, nz, z_full, z_half, &
                            diff_method, Tout)
+    call compute_advection(w, q, q_sfc, nt, nz, z_full, z_half, &
+                           diff_method, qout)
+
+    ! Test conservation quantity
+    ! do i = 100, 100
+    !     do k = 1, 10 
+    !         print*, q(k), qout(i,k)
+    !     end do
+    !     print*, sum(q(:)), sum(qout(i,:))
+    !     print*, size(q(:)), size(qout(i,:))
+    !     stop
+    ! end do
+    ! stop
 
     ! output result
     open(unit = 30, file = "output.txt")

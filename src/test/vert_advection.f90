@@ -8,7 +8,7 @@ contains
     implicit none
     integer, intent(in)    :: nt
     character(len=*), intent(in) :: diff_method
-    integer :: n, k, nz, dt = 1      ! CFL condition (mu=w*dt/dz)
+    integer :: n, k, nz, dt = 10      ! CFL condition (mu=w*dt/dz)
     real    :: dC_dz, dz, zbottom = 0.
     real    :: sfc_C    ! for surface effect (radiation, etc ...)
     real    :: flux_minus, flux_plus   ! for finite volume method
@@ -56,7 +56,7 @@ contains
                 flux_minus = sfc_C *w_half(k)*dt    ! equal zero
                 flux_plus  = C(n,k)*w_half(k+1)*dt
                 dz         = z_half(k+1) - z_half(k)
-                C(n+1,k)   = sfc_C+(flux_minus-flux_plus)/dz
+                C(n+1,k)   = C(n,k)+(flux_minus-flux_plus)/dz
 
                 do k = 2, nz
                     flux_minus = C(n,k-1)*w_half(k)*dt
