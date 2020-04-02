@@ -5,11 +5,11 @@ use         advection_mod, only: compute_advection
 implicit none
 
     ! Set variables
-    integer :: nz, it, i 
+    integer :: nz, it, i, allo_stat
     integer, parameter :: nt = 100  ! TODO! nt = t_final/dt
-    real    :: ztop, zbottom = 0.   ! default bottom [km]
-    real    :: GRAVITY, PI
-    real    :: T_sfc
+    real :: GRAVITY, PI
+    real :: T_sfc
+    real :: ztop
     real, dimension(:), allocatable :: z_full, z_half
     real, dimension(:), allocatable :: T, q, w
     real, dimension(:,:), allocatable :: Tout
@@ -33,6 +33,13 @@ implicit none
     ! close (92)
 
     T_sfc = 293.15       ! [K]
+
+    allocate(T(nz), w(nz), stat=allo_stat)
+    if (allo_stat/=0) then
+        print*, "Something went wrong trying to allocate 'T' & 'w'"
+        stop 1
+    endif
+
     T = (/ (I+273, I = 20,1,-1) /)  ! lapse rate 1K/km
     w = sin( (/ (I, I = 1,40,2) /) / 10. )
 
@@ -45,11 +52,20 @@ implicit none
     ! call show_constant()
 
     ! Calculate dz
-    allocate(z_full(nz), z_half(nz+1))
-    call compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half)
+    allocate(z_full(nz), z_half(nz+1), stat=allo_stat)
+    if (allo_stat/=0) then
+        print*, "Something went wrong trying to allocate 'z_full' & 'z_half'"
+        stop 1
+    endif
+
+    call compute_vert_coord(ztop, nz, grid_dz, z_full, z_half)
 
     ! time integration
-    allocate(Tout(nt,nz))
+    allocate(Tout(nt,nz), stat=allo_stat)
+    if (allo_stat/=0) then
+        print*, "Something went wrong trying to allocate 'Tout'"
+        stop 1
+    endif
     call compute_advection(w, T, T_sfc, nt, nz, z_full, z_half, &
                            diff_method, Tout)
 
