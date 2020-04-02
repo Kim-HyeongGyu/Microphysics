@@ -9,6 +9,7 @@ contains
     real, intent(out), dimension(nz+1) :: z_half
     integer :: k
     real    :: dz       ! delta z for z_half
+    real    :: dzr      ! common ratio for z_half, z_full
     real    :: zbottom  ! [km]
 
     select case (grid_dz)
@@ -22,13 +23,12 @@ contains
             z_full = z_half(1:nz) + dz/2.
         case ("stretching_grid")
             zbottom = 1E-3
-            dz = (ztop*1000.)**(1.0/REAL(nz))
+            dzr = (ztop*1000.)**(1.0/REAL(nz))
             z_half(1) = zbottom*1000.
             do k = 1, nz
-                z_half(k+1) = z_half(k) * dz
+                z_half(k+1) = z_half(k) * dzr
                 z_full(k)   = z_half(k) + ((z_half(k+1)-z_half(k))/2.)
             end do
-            calc_ztop = dz(1)*(1-dzr**nz)/(1-dzr)
         case default
             print*, "Not setup grid_dz option. &
                      please check input.nml"
