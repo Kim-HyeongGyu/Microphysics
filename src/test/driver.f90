@@ -11,7 +11,7 @@ implicit none
     real    :: GRAVITY, PI
     real    :: T_sfc, q_sfc
     real, dimension(:), allocatable :: z_full, z_half
-    real, dimension(:), allocatable :: T, q, w
+    real, dimension(:), allocatable :: T, q, w, dz
     real, dimension(:,:), allocatable :: Tout, qout
     ! real, dimension(n+1) :: array_foreward, array_backward
     character(len=20) :: grid_dz, diff_method
@@ -32,13 +32,14 @@ implicit none
     ! read  (92,rec=1) w
     ! close (92)
 
+    !TODO allocate variables
     T_sfc = 293.15       ! [K]
-    T = (/ (I+273, I = 20,1,-1) /)  ! lapse rate 1K/km
-    w = sin( (/ (I, I = 1,40,2) /) / 10. )
+    T = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
+    w = sin( (/ (I, I = 1,nz*2,2) /) / 10. )
     w = w*0. + 2.
     q_sfc = 0.           ! #num
-    q = w*0. + 10.
-    ! q(5) = 10.
+    q = w*0.
+    q(5) = 10.
 
     print*, "========= Setup variables ========="
     print*, "Num of z-grid   : ", nz
@@ -49,33 +50,30 @@ implicit none
     ! call show_constant()
 
     ! Calculate dz
-    allocate(z_full(nz), z_half(nz+1))
-    call compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half)
+    allocate(z_full(nz), z_half(nz+1), dz(nz))
+    call compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half, dz)
 
     ! time integration
-    allocate(Tout(nt,nz), qout(nt,nz))
-    call compute_advection(w, T, T_sfc, nt, nz, z_full, z_half, &
-                           diff_method, Tout)
-    call compute_advection(w, q, q_sfc, nt, nz, z_full, z_half, &
+    allocate(Tout(nz,nt), qout(nz,nt))
+    ! call compute_advection(w, T, T_sfc, nt, nz, dz, &
+    !                        diff_method, Tout)
+    call compute_advection(w, q, q_sfc, nt, nz, dz, &
                            diff_method, qout)
 
     ! Test conservation quantity
-    ! do i = 100, 100
-    !     do k = 1, 10 
-    !         print*, q(k), qout(i,k)
-    !     end do
-    !     print*, sum(q(:)), sum(qout(i,:))
-    !     print*, size(q(:)), size(qout(i,:))
-    !     stop
-    ! end do
-    ! stop
+    do i = 1, 100, 10
+        ! do k = 1, 20 
+        !     print*, q(k), qout(k,i)
+        ! end do
+        print*, sum(q(:)), sum(qout(:,i))
+    end do
 
     ! output result
     open(unit = 30, file = "output.txt")
     ! open(unit = 30, file = "output.dat", form='unformatted', &
     !      status = "unknown", access='direct', recl=4*nz) 
-    do i = 1, 100
-        write(30,*) Tout(i,:)
+    do i = 1, nt
+        write(30,*) qout(:,i)
     end do
     close(30)
 
