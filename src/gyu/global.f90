@@ -16,7 +16,7 @@ implicit none
     real, parameter :: gravity = 9.8  ! [m s-2]
 
     real, dimension(:),   allocatable :: z_full, z_half
-    real, dimension(:),   allocatable :: w, dz
+    real, dimension(:),   allocatable :: w, dz, Tinit, qinit
     real, dimension(:,:), allocatable :: T, q
     character(len=20) :: vertical_grid, vertical_advect
 

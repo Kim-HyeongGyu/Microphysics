@@ -23,18 +23,18 @@ contains
     end subroutine read_namelist
 
 
-    subroutine read_data()
-        allocate(T(nz,nt), w(nz), q(nz,nt))
+    subroutine read_data_init()
+        allocate(Tinit(nz), w(nz), qinit(nz))
         ! Temperature   [K]
-        T(:,1) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
+        Tinit(:) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
 
         ! Vertical wind [m s-1]
         w      = sin( (/ (I, I = 1,nz*2,2) /) / 10. )
         w      = w*0. + 2.
 
         ! Mixing ratio  [kg kg-1]
-        q(:,1) = w*0.
-        q(5,1) = 10.
+        qinit(:) = w*0.
+        qinit(5) = 10.
 
         ! initialization
         ! open  (91,file='./INPUT/T.dat',access='direct',recl=...)
@@ -46,7 +46,7 @@ contains
         ! open  (92,file='./INPUT/w.dat',access='direct',recl=...)
         ! read  (92,rec=1) w
         ! close (92)
-    end subroutine read_data
+    end subroutine read_data_init
 
 
     subroutine write_data()

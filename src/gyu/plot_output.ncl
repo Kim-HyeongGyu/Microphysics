@@ -9,10 +9,10 @@
 ;  - Output : plot
 ; ------------------------------------------------ ;
 
-nt = 100
+nt = 40
 nz = 20
 
-Tout = asciiread("./output.txt", -1, "float")
+Tout = asciiread("./Tout.txt", -1, "float")
 Tout:= onedtond(Tout, (/nt,nz/))
 Tout:= transpose(Tout)
 z = fspan(0,10000,nz)

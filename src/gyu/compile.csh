@@ -1,6 +1,6 @@
 #!/bin/csh -f
 
-set compiler = ifort # "gfortran", "ifort", "pgf90"
+set compiler = pgf90 # "gfortran", "ifort", "pgf90"
 
 set modules = (         global.f90 \
                        file_io.f90 \
@@ -15,4 +15,3 @@ $compiler -o ./a.out driver.f90 *.o
 
 rm -f *.mod
 rm -f *.o
-rm -f *.txt
