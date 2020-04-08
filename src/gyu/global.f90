@@ -25,8 +25,10 @@ contains
 
     subroutine show_setup_variables()
         print*, "========= Setup variables ========="
+        print*, "Num of times       : ", nt
         print*, "Num of z-grid      : ", nz
-        print*, "Top of model       : ", ztop, " [m]"
+        print*, "Time step (dt)     : ", dt,    " [s]"
+        print*, "Top of model       : ", ztop,  " [m]"
         print*, "Grid type          : ", vertical_grid
         print*, "Integration method : ", vertical_advect
         print*, "==================================="

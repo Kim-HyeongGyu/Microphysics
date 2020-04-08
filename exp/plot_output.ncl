@@ -9,8 +9,8 @@
 ;  - Output : plot
 ; ------------------------------------------------ ;
 
-nt = 40
-nz = 20
+nt = 40     ; TODO: how to set values automatically?
+nz = 20     ; num_levels from input.nml
 
 Tout = asciiread("./Tout.txt", -1, "float")
 Tout:= onedtond(Tout, (/nt,nz/))

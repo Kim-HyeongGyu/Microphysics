@@ -4,7 +4,7 @@ implicit none
     
 contains
 
-    subroutine read_namelist()
+    subroutine read_namelist()  ! {{{
         ! Set variables
         namelist /main_nml/     t_final
         namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
@@ -20,10 +20,10 @@ contains
         ! Overide default values for optional arguments
         nz      = num_levels
         ztop    = top_of_atmosphere   ! [m]
-    end subroutine read_namelist
+    end subroutine read_namelist    ! }}}
 
 
-    subroutine read_data_init()
+    subroutine read_data_init() ! {{{
         allocate(Tinit(nz), w(nz), qinit(nz))
         ! Temperature   [K]
         Tinit(:) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
@@ -46,10 +46,10 @@ contains
         ! open  (92,file='./INPUT/w.dat',access='direct',recl=...)
         ! read  (92,rec=1) w
         ! close (92)
-    end subroutine read_data_init
+    end subroutine read_data_init   ! }}}
 
 
-    subroutine write_data()
+    subroutine write_data() ! {{{
         open(unit = 30, file = "Tout.txt")
         ! open(unit = 30, file = "output.dat", form='unformatted', &
         !      status = "unknown", access='direct', recl=4*nz) 
@@ -65,6 +65,6 @@ contains
             write(30,*) q(:,n)
         end do
         close(30)
-    end subroutine write_data
+    end subroutine write_data   ! }}}
 
 end module file_io_mod

@@ -8,7 +8,7 @@
     num_levels        = 20,         ! [#]
     top_of_atmosphere = 10000,      ! [m]
     vertical_grid     = "constant", ! "constant", "stretching"
-    vertical_advect   = "finite_difference",  ! "finite_difference", "finite_volume", "PPM"
+    vertical_advect   = "PPM",      ! "finite_difference", "finite_volume", "PPM"
     CFL_condition     = 0.5         ! courant number 
                                     ! (Courant–Friedrichs–Lewy condition)
 /

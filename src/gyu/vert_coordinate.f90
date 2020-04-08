@@ -1,6 +1,8 @@
 module vert_coordinate_mod
+use            global_mod, only: error_mesg
 contains
-    subroutine compute_vert_coord(ztop, zbottom, nz, grid_dz, z_full, z_half, dz)
+    subroutine compute_vert_coord(ztop, zbottom, nz,     &
+                                  grid_dz, z_full, z_half, dz)
     implicit none
     integer,            intent(in)  :: nz                ! Num of z_full
     real,               intent(in)  :: ztop, zbottom     ! [m]
@@ -30,9 +32,8 @@ contains
                 z_full(k-1) = z_half(k-1) + dz(k-1)/2.
             end do
         case default
-            print*, "Not setup grid_dz option. &
-                     please check input.nml"
-            stop
+            call error_mesg("Not setup grid_dz option. &
+                             please check input.nml")
     end select
 
     end subroutine compute_vert_coord

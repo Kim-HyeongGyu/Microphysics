@@ -11,22 +11,20 @@ use         advection_mod, only: compute_advection
 implicit none
 
     call read_namelist()
-    call show_setup_variables()
 
     ! Calculate dz
     call compute_vert_coord(ztop, zbottom, nz, vertical_grid, &
                             z_full, z_half, dz)
 
     call read_data_init()
-    ! print*, Tinit(:), qinit(1)
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, w, nt, dt)
     allocate(T(nz,nt), q(nz,nt))
     T(:,1) = Tinit
     q(:,1) = qinit
-    nt = 40
-    ! print*, dt, nt
+    nt = 40!; dt = 10
+    call show_setup_variables()
 
     ! Dynamic: time integration
     do n = 1, nt-1
@@ -37,15 +35,10 @@ implicit none
     end do
 
     ! Test conservation quantity
-    ! do i = 1, 10
-    ! ! do i = 1, nt
-    !     ! do k = 1, nz 
-    !     !     print*, q(k), qout(k,i)
-    !     ! end do
-    !     print*, sum(q(:)), sum(qout(:,i))
+    ! do i = 1, nt
+    !     print*, sum(q(:,1)), sum(q(:,i))
     !     ! if (i == 1) exit
     ! end do
-    ! stop
     call write_data()
 
     call initialize_end()   ! deallocate storage
