@@ -4,7 +4,7 @@ Repository for Microphysics II class in KNU.
 ## Running model
 Just clone repository and run `./compile.csh` script.
 ```
-$ git clone
+$ git clone https://github.com/Kim-HyeongGyu/Microphysics.git
 $ cd exp
 $ ./compile.csh     # First, set compiler and options.
 ```
