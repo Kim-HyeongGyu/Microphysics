@@ -1,6 +1,26 @@
-&setup_list
-    nz      = 20,               ! num of grid
-    ztop    = 0.5,               ! Top of atmosphere [km]
-    grid_dz = "constant_grid"   ! "constant_grid", "stretching_grid"
-    diff_method = "finite_volume"   ! "finite_difference", "finite_volume"
+! Namelist for 1D box model
+
+&main_nml
+    t_final = 10000                  ! End of time [s]
 /
+
+&dynamics_nml
+    num_levels        = 10,         ! [#]
+    top_of_atmosphere = 10000,      ! [m]
+    vertical_grid     = "constant", ! "constant", "stretching"
+    vertical_advect   = "finite_difference",  ! "finite_difference", "finite_volume"
+    CFL_condition     = 0.5         ! courant number 
+                                    ! (Courant–Friedrichs–Lewy condition)
+/
+
+! &physics_nml
+!     rmin =
+!     rmax = 
+!     rratio = 
+!     num_bins = 
+!     distribution = "log_normal"     ! "gamma"
+!     N0 = 
+!     sigma = 
+!     r0 = 
+!     mu = 
+! /
