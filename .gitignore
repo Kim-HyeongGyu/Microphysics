@@ -4,6 +4,7 @@
 *.pdf
 *.png
 *.gif
+*.txt
 a.out
 exec
 run.x
