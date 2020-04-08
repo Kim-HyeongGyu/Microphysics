@@ -7,7 +7,11 @@ use        initialize_mod, only: compute_dt_from_CFL, &
                                       initialize_end
 use   vert_coordinate_mod, only: compute_vert_coord
 use         advection_mod, only: compute_advection
+<<<<<<< HEAD
 ! use      microphysics_mod, only: make_bin
+=======
+use      microphysics_mod, only: make_bin
+>>>>>>> f23e74de0c2a6562959aa5a3a52011c920698ad6
 implicit none
 
     call read_namelist()
