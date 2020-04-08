@@ -9,10 +9,10 @@
 ;  - Output : plot
 ; ------------------------------------------------ ;
 
-nt = 100
+nt = 40
 nz = 20
 
-Tout = asciiread("./output.txt", -1, "float")
+Tout = asciiread("./Tout.txt", -1, "float")
 Tout:= onedtond(Tout, (/nt,nz/))
 Tout:= transpose(Tout)
 z = fspan(0,10000,nz)
@@ -32,7 +32,7 @@ res@tmYLMinorOutwardLengthF = 0.0
 cres = res
 cres@cnFillOn = True
 cres@cnLevelSelectionMode = "ExplicitLevels"
-; cres@cnLevels = ispan(270,295,1) ; T
+cres@cnLevels = ispan(270,295,1) ; T
 
 cres@lbOrientation 	= "vertical"
 cres@pmLabelBarHeightF           = 0.6
@@ -45,10 +45,10 @@ plt = gsn_csm_contour(wks, Tout, cres)
 exit
 
 ; make gif plot
-wks = gsn_open_wks("pdf", "for_gif")
+wks = gsn_open_wks("x11", "for_gif")
 lres = res
 lres@trXMinF = 0.
-lres@trXMaxF = 20.
+lres@trXMaxF = 300
 ; lres@trYMinF = 
 ; lres@trYMaxF =
 

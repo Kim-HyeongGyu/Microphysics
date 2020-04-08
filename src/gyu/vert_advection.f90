@@ -32,14 +32,19 @@ contains
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C
+    integer :: kk
     integer :: ks, ke, kstart, kend
     real    :: wgt   ! weight dz
     real    :: Cwgt  ! weight variable
-    real    :: Cdt, cn, Cst
     real    :: dC_dt, zbottom = 0.
+    real    :: tt, cn, Csum, dzsum, dtw
+    real    :: xx, a, b, Cm, C6, Cst, Cdt
+    real, dimension(0:3,nz) :: zwt
+    real, dimension(nz)    :: slp, C_left, C_right
     real, dimension(nz)   :: w_full, slope
     real, dimension(nz+1) :: w_half, C_half, flux
     character(len=20)     :: eqn_form = "FLUX_FORM"
+    logical :: linear, test_1
 
     ! vertical indexing
     ks     =    1; ke   = nz
@@ -102,6 +107,124 @@ contains
             !     end do
             ! end do !}}}
 
+        ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
+        case ("PPM")
+            call compute_weights(dz, zwt)
+            call slope_z(C, dz, slp, linear=.false.)        ! Equation 1.7
+            do k = ks+2, ke-1
+                C_left(k) = C(k-1) + zwt(1,k)*(C(k)-C(k-1)) &
+                                   - zwt(2,k)*slp(k)        &
+                                   + zwt(3,k)*slp(k-1)      ! Equation 1.6 
+                C_right(k-1) = C_left(k)
+                ! Or, we can use Equation 1.9
+                ! C_rihgt(k) = (7./12.)*(a(k)+a(k+1)) - (1./12.)*(a(k+2)+a(k-1))
+                ! coming out of this loop, all we need is r_left and r_right
+            enddo
+
+            ! boundary values  ! masks ???????
+            C_left (ks+1) = C(ks+1) - 0.5*slp(ks+1)
+            C_right(ke-1) = C(ke-1) + 0.5*slp(ke-1)
+
+            ! pure upstream advection near boundary
+            ! r_left (ks) = r(ks)
+            ! r_right(ks) = r(ks)
+            ! r_left (ke) = r(ke)
+            ! r_right(ke) = r(ke)
+
+            ! make linear assumption near boundary
+            ! NOTE: slope is zero at ks and ks therefore
+            !       this reduces to upstream advection near boundary
+            C_left (ks) = C(ks) - 0.5*slp(ks)
+            C_right(ks) = C(ks) + 0.5*slp(ks)
+            C_left (ke) = C(ke) - 0.5*slp(ke)
+            C_right(ke) = C(ke) + 0.5*slp(ke)
+
+            ! if (diff_scheme == FINITE_VOLUME_PARABOLIC2) then
+            ! limiters from Lin (2003), Equation 6 (relaxed constraint)
+                ! do k = ks, ke
+                ! C_left (k) = C(k) - sign( min(abs(slp(k)),       &
+                !                           abs(C_left (k)-C(k))), &
+                !                           slp(k) )
+                ! C_right(k) = C(k) + sign( min(abs(slp(k)),       &
+                !                           abs(C_right(k)-C(k))), &
+                !                           slp(k) )
+                ! enddo
+            ! else
+            ! limiters from Colella and Woodward (1984), Equation 1.10
+            do k = ks, ke
+                test_1 = (C_right(k)-C(k))*(C(k)-C_left(k)) <= 0.0
+                if (test_1) then        ! 1.10 (1)
+                    C_left (k) = C(k)
+                    C_right(k) = C(k)
+                endif
+                if (k == ks .or. k == ke) cycle
+                Cm = C_right(k) - C_left(k)
+                a = Cm*(C(k) - 0.5*(C_right(k) + C_left(k)))
+                b = Cm*Cm/6.
+                if (a >  b) C_left (k) = 3.0*C(k) - 2.0*C_right(k)  ! 1.10 (2)
+                if (a < -b) C_right(k) = 3.0*C(k) - 2.0*C_left (k)  ! 1.10 (3)
+            enddo
+            ! endif
+            
+            ! compute fluxes at interfaces
+            tt = 2./3.
+            do k = kstart, kend ! ks+1, nz
+                if (w_half(k) >= 0.) then ! w = positive {{{
+                    if (k == ks) cycle    ! inflow
+                        cn = dt*w_half(k)/dz(k-1)   ! Courant number
+                        kk = k-1
+                    ! extension for Courant numbers > 1
+                    if (cn > 1.) then
+                        Csum = 0.; dzsum = 0.
+                        dtw  = dt*w_half(k)
+                        do while (dzsum+dz(kk) < dtw)
+                            if (kk == 1) exit
+                            dzsum = dzsum + dz(kk)
+                            Csum  =  Csum +  C(kk)
+                            kk    =    kk -1
+                        enddo
+                        xx = (dtw-dzsum)/dz(kk)
+                    else
+                        xx = cn     ! y = u*dt (1.13)
+                    endif
+                    Cm = C_right(kk) - C_left(kk)
+                    C6 = 6.0*(C(kk) - 0.5*(C_right(kk) + C_left(kk)))   ! (1.5)
+                    if (kk == ks) C6 = 0.
+                    Cst = C_right(kk) - 0.5*xx*(Cm - (1.0 - tt*xx)*C6)  ! (1.12)
+                    ! extension for Courant numbers > 1
+                    if (cn > 1.) Cst = (xx*Cst + Csum)/cn   ! }}}
+                else                        ! w = negative {{{
+                    if (k == ke+1) cycle    ! inflow
+                    cn = - dt*w_half(k)/dz(k)
+                    kk = k
+                    ! extension for Courant numbers > 1
+                    if (cn > 1.) then
+                        Csum = 0.; dzsum = 0.
+                        dtw  = -dt*w_half(k)
+                        do while (dzsum+dz(kk) < dtw)
+                            if (kk == ks) exit
+                            dzsum = dzsum + dz(kk)
+                            Csum  =  Csum +  C(kk)
+                            kk    =    kk + 1
+                        enddo
+                        xx = (dtw-dzsum)/dz(kk)
+                    else
+                        xx = cn
+                    endif
+                    Cm = C_right(kk) - C_left(kk)
+                    C6 = 6.0*(C(kk) - 0.5*(C_right(kk) + C_left(kk)))
+                    if (kk == ke) C6 = 0.
+                    Cst = C_left(kk) + 0.5*xx*(Cm + (1.0 - tt*xx)*C6)
+                    ! extension for Courant numbers > 1
+                    if (cn > 1.) Cst = (xx*Cst + Csum)/cn
+                endif   ! }}}
+                flux(k) = w_half(k)*Cst
+                ! if (xx > 1.) cflerr = cflerr+1
+                ! cflmaxx = max(cflmaxx,xx)
+                ! cflmaxc = max(cflmaxc,cn)
+            enddo
+            ! }}}
+
         case default
             call error_mesg("Not setup diff_method option. &
                              please check input.nml")
@@ -114,9 +237,7 @@ contains
                 dC_dt     = - (flux(k+1) - flux(k)) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt
             end do
-            print*, dC_dt
             ! TODO: SEGMENTATION FAULT
-            stop
         case ("ADVECTIVE_FORM")
             do k = ks, ke
                 dC_dt     = - ( flux(k+1) - flux(k) )          / dz(k) &
@@ -169,7 +290,7 @@ contains
                 slope(k) = sign(1.,slope(k)) *  &
                             min( abs(slope(k)), &
                                 2.*(C(k)-Cmin), &
-                                2.*(Cmax-C(k))  )
+                                2.*(Cmax-C(k))  )   ! Equation 1.8
             else
                 slope(k) = 0.  ! always slope=0
             endif
@@ -177,5 +298,57 @@ contains
     endif
 
     end subroutine slope_z
+
+
+ subroutine compute_weights ( dz, zwt )
+ real, intent(in),  dimension(:)    :: dz
+ real, intent(out), dimension(0:3,nz) :: zwt
+ real    :: denom1, denom2, denom3, denom4, num3, num4, x, y
+ integer :: k, nlevs
+ logical :: redo
+ real, allocatable :: zwts(:,:), dzs(:)
+
+! check the size of stored coefficients
+! need to reallocate if size has changed
+  nlevs = size(dz,1)
+  allocate (zwts(0:3,nlevs))
+  allocate (dzs (nlevs))
+   
+! coefficients/weights for computing values at grid box interfaces
+! only recompute coefficients for a column when layer depth has changed
+
+    redo = .false.
+    do k=1,size(dz,1)
+      if (dz(k) /= dzs(k)) then
+        redo = .true.
+        exit
+      endif
+    enddo
+
+   if (redo) then
+     do k = 3, size(dz,1)-1
+       denom1 = 1.0/(dz(k-1) + dz(k))
+       denom2 = 1.0/(dz(k-2) + dz(k-1) + dz(k) + dz(k+1))
+       denom3 = 1.0/(2*dz(k-1) +   dz(k))  
+       denom4 = 1.0/(  dz(k-1) + 2*dz(k))  
+       num3   = dz(k-2) + dz(k-1)          
+       num4   = dz(k)   + dz(k+1)        
+       x      = num3*denom3 - num4*denom4        
+       y      = 2.0*dz(k-1)*dz(k) ! everything up to this point is just
+                                  ! needed to compute x1,x1,x3                      
+       zwt(0,k) = dz(k-1)*denom1                ! = 1/2 in equally spaced case
+       zwt(1,k) = zwt(0,k) + x*y*denom1*denom2  ! = 1/2 in equally spaced case
+       zwt(2,k) = dz(k-1)*num3*denom3*denom2    ! = 1/6 ''
+       zwt(3,k) = dz(k)*num4*denom4*denom2      ! = 1/6 ''
+     enddo
+     dzs(:) = dz(:)
+     zwts(0:3,:) = zwt(0:3,:)
+   else
+
+   ! use previously computed coefficients
+     zwt(0:3,:) = zwts(0:3,:)
+   endif
+
+ end subroutine compute_weights
 
 end module advection_mod

@@ -1,0 +1,9 @@
+*.o
+*.mod
+*.swp
+*.pdf
+*.png
+*.gif
+a.out
+exec
+run.x
