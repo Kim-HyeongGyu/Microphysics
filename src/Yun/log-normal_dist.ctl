@@ -1,0 +1,10 @@
+DSET ^log-normal_dist.gdat
+TITLE timeseries
+UNDEF -99.
+XDEF 40 LINEAR 1 1
+YDEF 1  LINEAR 1 1
+ZDEF 1  LINEAR 1 1
+TDEF 1  LINEAR 1JAN2006 1mo
+VARS 1
+dist 0 0 *dist
+ENDVARS 
