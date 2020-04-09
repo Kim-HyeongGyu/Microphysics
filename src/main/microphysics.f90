@@ -2,7 +2,7 @@
 
     implicit none
 
-    character(len=*), intent(in) :: dist_type
+!    character(len=*), intent(in) :: dist_type      ! IF USE NAMELIST...
     integer :: nz, nbin = 40
     real*8, dimension(nbin) :: N
     real, dimension(nbin)   :: r , m, dr
@@ -27,8 +27,8 @@
 !        m(i)=(mb(i)+mb(i+1))/2.
     enddo
 
-    select case (dist_type)
-        case ("log_normal_dist")
+!    select case (dist_type)
+!        case ("log_normal")
             ave = 1. ; std = 0.
             !ave = 1. ; std = 4.
             do i = 1, nbin
@@ -50,7 +50,7 @@
             do i =1, nbin
                 WRITE(10, REC=i) N(i)
             enddo
-        case ("gamma_dist")
+!        case ("gamma")
     
             !mu = 0.1 ; lamda = 1.
             !do i = 1, nbin
