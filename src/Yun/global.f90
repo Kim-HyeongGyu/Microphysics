@@ -3,6 +3,7 @@ implicit none
     
     integer :: n, k, i                ! Iteration
     integer :: num_levels, nz = 10    ! Num of levels
+    integer :: nlev
     integer :: nt                     ! time step  [s]
     integer :: dt                     ! delta time [s]
     integer :: t_final                ! Last time  [s]
@@ -12,8 +13,9 @@ implicit none
     real    :: CFL_condition = 0.5
 
     real, parameter :: PI = 3.141592
-    real, parameter :: R = 287        ! [J kg-1 K-1]
-    real, parameter :: gravity = 9.8  ! [m s-2]
+    real, parameter :: R  = 287.       ! [J kg-1 K-1]
+    real, parameter :: Cp = 1003.5     ! [J kg-1 K-1] specific heat at constant pressure
+    real, parameter :: g  = 9.8        ! [m s-2] gravity 
 
     real, dimension(:),   allocatable :: z_full, z_half
     real, dimension(:),   allocatable :: w, dz, Tinit, qinit
@@ -31,6 +33,12 @@ contains
         print*, "Integration method : ", vertical_advect
         print*, "==================================="
     end subroutine show_setup_variables
+
+    subroutine show_constant()
+        print*, "PI = ", PI
+        print*, "R  = ", R, " [J kg-1 K-1]"
+        print*, "g  = ", g, " [m s-2]"
+    end subroutine show_constant
 
     subroutine error_mesg(message)
         character(len=*), intent(in) :: message
