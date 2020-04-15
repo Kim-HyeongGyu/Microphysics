@@ -10,11 +10,13 @@ contains
         namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
                                 vertical_grid, vertical_advect, &
                                 CFL_condition
-        ! namelist /physics_nml/  rmin, ...
+        namelist /physics_nml/  rmin, rratio, nbin, Nc, qc,     &
+                                dist_type
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 
         read  (unit = 8, nml  = dynamics_nml) 
+        read  (unit = 8, nml  = physics_nml) 
         close (unit = 8)
 
         ! Overide default values for optional arguments
@@ -38,10 +40,10 @@ contains
 
         ! initialization
         ! open  (91,file='./INPUT/T.dat',access='direct',recl=...)
-        ! read  (91,rec=1) T
+        ! read  (91,rec=1) Tinit
         ! close (91)
         ! open  (92,file='./INPUT/q.dat',access='direct',recl=...)
-        ! read  (92,rec=1) q
+        ! read  (92,rec=1) qinit
         ! close (92)
         ! open  (92,file='./INPUT/w.dat',access='direct',recl=...)
         ! read  (92,rec=1) w

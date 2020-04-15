@@ -1,11 +1,14 @@
-module microphysics_mod
-use            global_mod !only: error_mesg
+module microphysics
 contains
-    subroutine conc_dist()
+    subroutine conc_dist(radius, Nc, qc, dist_type, Nr)
+        real, dimension(:), intent(in) :: radius   ! [um]
+        real,               intent(in) :: Nc, qc
+        character(len=*),   intent(in) :: dist_type
+        real, dimension(size(radius)), intent(out) :: Nr
         real :: u, std, lamda, N0, r0
         real :: umul
-
-        allocate(Nr(nbin))
+        real, parameter :: rho = 1000.     ! [kg m-3] water density
+        real, parameter :: PI = 3.141592
 
         select case (trim(dist_type))
             ! 1) Log normal dist_type
@@ -29,12 +32,16 @@ contains
                 lamda = ( (rho/qc)*(4./3.)*PI*Nc*umul )**(   1./3.)
                 Nr    = N0*radius**u*exp(-lamda*radius)
             case default
-                call error_mesg("Not setup dist_type option. &
-                                 please check input.nml")
+                ! call error_mesg("Not setup dist_type option. &
+                !                  please check input.nml")
+                stop 2
         end select
     end subroutine conc_dist
 
-    subroutine make_bins()
+    subroutine make_bins(rmin, rratio, nbin, radius)
+        integer,               intent(in)  :: nbin
+        real,                  intent(in)  :: rmin, rratio
+        real, dimension(nbin), intent(out) :: radius ! [m]
         real, dimension(nbin)   :: r    ! radius [m]
         real, dimension(nbin)   :: m    ! mass   [kg]
         real, dimension(nbin+1) :: rb   ! radius at boundary
@@ -42,7 +49,6 @@ contains
         real, parameter :: PI = 3.141592
         real, parameter :: rho = 1000.  ! [kg m-3] water density
         
-        allocate(radius(nbin))
         rb = (/ (rmin*(rratio**i), i=0,nbin) /)
         mb = (4./3.)*pi*rho*rb**3
 
@@ -53,4 +59,5 @@ contains
         enddo
         radius = r
     end subroutine make_bins
-end module microphysics_mod
+
+end module microphysics
