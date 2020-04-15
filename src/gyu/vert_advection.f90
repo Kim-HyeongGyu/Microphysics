@@ -1,8 +1,9 @@
 module advection_mod
 use            global_mod !only: error_mesg
 contains
-    subroutine compute_advection(w_full, C, dt, nz, &   ! {{{
-                                 dz, scheme, next_C)
+    subroutine compute_advection(w_full, C, dt, nz,  &   ! {{{
+                                 dz, scheme, next_C, &
+                                 Csfc)
 !-- Input
 ! w_full = vertical velocity at full coordinate(nz)
 ! C      = n-1 time step
@@ -20,36 +21,49 @@ contains
 ! next_C = advected quantity
 !
 ! Note! Here, flux form is used for advection term
-! FLUX_FORM      = solves for -d(wr)/dt
-! ADVECTIVE_FORM = solves for -w*d(r)/dt
+!      FLUX_FORM      = solves for -d(wr)/dt
+!      ADVECTIVE_FORM = solves for -w*d(r)/dt
 !
-!       Here, we use Lorenz configuration
+! Note! Here, we use Lorenz configuration
 !       See Figure 1 in Holdaway et al., (2012) 
-!       https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
+!      https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
+!
+!-- Reference
+!  1. Colella and Woodward (1984)
+!    https://doi.org/10.1016/0021-9991(84)90143-8
+!
+!  2. Lin (2003)
+!    https://doi.org/10.1175/1520-0493(2004)132<2293:AVLFDC>2.0.CO;2
+!
+!  3. Brasseur and Jacob (2017)
+!    https://doi.org/10.1017/9781316544754
+!    http://acmg.seas.harvard.edu/education/jacob_lectures_ctms_chap2.pdf
+!
 
     implicit none
     integer,              intent(in) :: dt, nz
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C
+    real, optional,       intent(in) :: Csfc
+
     integer :: kk
     integer :: ks, ke, kstart, kend
-    real    :: wgt   ! weight dz
-    real    :: Cwgt  ! weight variable
+    real    :: wgt, Cwgt    ! weight dz, variable
+    real    :: C_sfc        ! surface value for boundary
     real    :: dC_dt, zbottom = 0.
     real    :: tt, cn, Csum, dzsum, dtw
     real    :: xx, a, b, Cm, C6, Cst, Cdt
     real, dimension(0:3,nz) :: zwt
-    real, dimension(nz)    :: slp, C_left, C_right
-    real, dimension(nz)   :: w_full, slope
-    real, dimension(nz+1) :: w_half, flux
-    character(len=20)     :: eqn_form = "FLUX_FORM"
+    real, dimension(nz)     :: slp, C_left, C_right
+    real, dimension(nz)     :: w_full, slope
+    real, dimension(nz+1)   :: w_half, flux
+    character(len=20)       :: eqn_form = "FLUX_FORM" !"ADVECTIVE_FORM"
     logical :: linear, test_1
 
     ! vertical indexing
-    ks     =    1; ke   = nz
-    ! kstart = ks+1; kend = ke
-    kstart =   ks; kend = ke+1  ! do outflow boundary
+    ks     =  1; ke   = nz
+    kstart = ks; kend = ke+1    ! do outflow boundary (for FVM)
 
     ! Make stagged grid for advection
     do k = ks+1, ke
@@ -60,11 +74,12 @@ contains
     ! TODO: How to give boundary condition?
     ! Set Boundary Condition
     ! most likely w = 0 at these points
-    ! w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
-    w_half(1) = 2.; w_half(nz+1) = 2.
-    ! flux(ks) = 0.; flux(ke+1) = 0.        ! Neumann BC
-    flux(ks)   = w_half(ks)*C(ks)           ! do outflow boundary
-    flux(ke+1) = w_half(ke+1)*C(ke)
+    w_half(1) = 0.; w_half(nz+1) = 0.    ! Homogeneous Dirichlet BC
+    flux(ks) = 0.; flux(ke+1) = 0.     ! Neumann BC
+    ! C_sfc = C(ks)
+    ! if (present(Csfc)) C_sfc = Csfc
+    ! flux(ks)   = w_half(ks  )*C(ks)      ! do outflow boundary
+    ! flux(ke+1) = w_half(ke+1)*C(ke)
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{
@@ -219,8 +234,8 @@ contains
     end select
     
     ! vertical advective tendency {{{
-    select case (eqn_form)
-        case ("FLUX_FORM")
+    select case (eqn_form)  ! see details from
+        case ("FLUX_FORM")  ! Brasseur and Jacob (2017) 277p
             do k = ks, ke
                 dC_dt     = - (flux(k+1) - flux(k)) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt

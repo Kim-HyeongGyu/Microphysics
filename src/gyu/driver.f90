@@ -7,7 +7,7 @@ use        initialize_mod, only: compute_dt_from_CFL, &
                                       initialize_end
 use   vert_coordinate_mod, only: compute_vert_coord
 use         advection_mod, only: compute_advection
-! use      microphysics_mod, only: make_bin
+use      microphysics_mod, only: make_bins, conc_dist
 implicit none
 
     call read_namelist()
@@ -17,6 +17,8 @@ implicit none
                             z_full, z_half, dz)
 
     call read_data_init()
+    call make_bins()
+    call conc_dist()
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, w, nt, dt)
