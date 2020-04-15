@@ -2,7 +2,7 @@ module global_mod
 implicit none
     
     integer :: n, k, i                ! Iteration
-    integer :: num_levels, nz = 10    ! Num of levels
+    integer :: num_levels, nz         ! Num of levels
     integer :: nlev
     integer :: nt                     ! time step  [s]
     integer :: dt                     ! delta time [s]
@@ -18,10 +18,11 @@ implicit none
     real, parameter :: g  = 9.8        ! [m s-2] gravity 
 
     real, dimension(:),   allocatable :: z_full, z_half
-    real, dimension(:),   allocatable :: w, dz  !, Tinit, qinit
+    real, dimension(:),   allocatable :: w, dz, Tinit, qinit
     real, dimension(:),   allocatable :: lev, temp_in, qv_in, w_in  
     real, dimension(:,:), allocatable :: T, q
     character(len=20) :: vertical_grid, vertical_advect
+    character(len=10) :: vert_var, temp_var
 
 public
 contains

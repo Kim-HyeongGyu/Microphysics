@@ -17,8 +17,8 @@ PROGRAM NR1_READ
   INTEGER :: dimids
 
   ! User define
-  CHARACTER (LEN = *), PARAMETER :: FILE_NAME = "./data/ERA-Interim_w_2018.nc"
-  CHARACTER (LEN = *), PARAMETER :: OUTFILE_NAME = "./ERA_Interim_w_AUG.nc"
+  CHARACTER (LEN = *), PARAMETER :: FILE_NAME = "./data/ERA-Interim_W_2018.nc"
+  CHARACTER (LEN = *), PARAMETER :: OUTFILE_NAME = "./ERA_Interim_W_AUG.nc"
   CHARACTER (LEN = *), PARAMETER :: LEV_NAME = "level"
   CHARACTER (LEN = *), PARAMETER :: var_name = "w"
   CHARACTER (LEN = *), PARAMETER :: ADD_OFFSET = "add_offset"
@@ -33,11 +33,13 @@ PROGRAM NR1_READ
   CALL CHECK( NF90_INQUIRE(ncid, ndims_in, nvars_in, ngatts_in, unlimdimid_in) )
 
   ! Get the varids of variable
-  CALL CHECK( NF90_INQ_VARID(ncid, lev_name, lev_varid) )
-  CALL CHECK( NF90_INQ_DIMID(ncid, lev_name, lev_id) )
-  CALL CHECK( NF90_INQUIRE_DIMENSION(ncid, lev_id, lev_name, nlev) )
+  CALL CHECK( NF90_INQ_VARID(ncid, LEV_NAME, lev_varid) )
+  CALL CHECK( NF90_INQ_DIMID(ncid, LEV_NAME, lev_id) )
+  CALL CHECK( NF90_INQUIRE_DIMENSION(ncid, lev_id, len=nlev) )
   CALL CHECK( NF90_INQ_VARID(ncid, var_name, var_varid) )
   
+  print*, lev_id, nlev
+
   ! Read data from the file
   CALL CHECK( NF90_GET_VAR(ncid, lev_varid, lev) )
   CALL CHECK( NF90_GET_VAR(ncid, var_varid, var) )
@@ -70,32 +72,32 @@ PROGRAM NR1_READ
   
 
  ! Create the netCDF file.
-  CALL CHECK(nf90_create(OUTFILE_NAME,nf90_clobber,ncid))
+!  CALL CHECK(nf90_create(OUTFILE_NAME,nf90_clobber,ncid))
 
  ! Define the dimensions.
-  CALL CHECK(nf90_def_dim(ncid, "level",nlev-10,lev_dimid))
+!  CALL CHECK(nf90_def_dim(ncid, "level",nlev-10,lev_dimid))
 
  ! Define corrdinate variables
-  CALL CHECK(nf90_def_var(ncid, "lev", nf90_real, lev_dimid, lev_id))
+!  CALL CHECK(nf90_def_var(ncid, "lev", nf90_real, lev_dimid, lev_id))
 
 
   dimids = lev_dimid
  ! Define variable
-  CALL CHECK(nf90_def_var(ncid, var_name,nf90_float,dimids,varid))
+!  CALL CHECK(nf90_def_var(ncid, var_name,nf90_float,dimids,varid))
 
  ! add Units
-  CALL CHECK(nf90_put_att(ncid,lev_id,"units","millibars"))
-  CALL CHECK(nf90_put_att(ncid,lev_id,"long_name","pressure_level"))
+!  CALL CHECK(nf90_put_att(ncid,lev_id,"units","millibars"))
+!  CALL CHECK(nf90_put_att(ncid,lev_id,"long_name","pressure_level"))
 
-  CALL CHECK(nf90_put_att(ncid,varid,"units",units))
-  CALL CHECK(nf90_put_att(ncid,varid,"long_name",lname))
+!  CALL CHECK(nf90_put_att(ncid,varid,"units",units))
+!  CALL CHECK(nf90_put_att(ncid,varid,"long_name",lname))
 
-  CALL CHECK(nf90_enddef(ncid))  !End DEfinitions
+!  CALL CHECK(nf90_enddef(ncid))  !End DEfinitions
 
  ! Write Data
-   CALL CHECK(nf90_put_var(ncid, lev_id, ll))
-   CALL CHECK(nf90_put_var(ncid,varid,tt))
-   CALL CHECK(nf90_close(ncid))
+!   CALL CHECK(nf90_put_var(ncid, lev_id, ll))
+!   CALL CHECK(nf90_put_var(ncid,varid,tt))
+!   CALL CHECK(nf90_close(ncid))
 
 
 CONTAINS
