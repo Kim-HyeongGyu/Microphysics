@@ -30,18 +30,18 @@ contains
 
 
 
-    subroutine read_data_init(nlev,lev,temp_in,qv_in,w) ! {{{
+    subroutine read_data_init(nlev,lev,temp_in,qv_in,w_in) ! {{{
 
     integer,intent(out) :: nlev
-    real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w
-    real, dimension(:),allocatable :: w_in
+    real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w_in
+    real, dimension(:),allocatable :: w
     character(len=5), parameter :: vname1 = "t"
     character(len=5), parameter :: vname2 = "q"
     character(len=5), parameter :: vname3 = "w"
     character(len=300) :: INAME1, INAME2, INAME3, IPATH
     character(len=6) :: ld_name = "level", l_name= "lev" ! lev dimension_name, lev_var_name
 
-     IPATH = '/home/ojs9294/class/mirco_2020/Microphysics/exp/input'
+     IPATH = './input'
 
      WRITE(INAME1,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname1),'_AUG.nc'
      WRITE(INAME2,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname2),'_AUG.nc'
@@ -57,13 +57,13 @@ contains
 
 !      ========== ideal status ==============
 !        allocate(Tinit(nz), w(nz), qinit(nz))
-        allocate(w(nlev))
+!        allocate(w(nlev))
         ! Temperature   [K]
 !        Tinit(:) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
 
         ! Vertical wind [m s-1]
 !        w      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
-        w      = w*0. + 2.
+!        w      = w*0. + 2.
 
         ! Mixing ratio  [kg kg-1]
 !       qinit(:) = w*0.
@@ -77,7 +77,7 @@ contains
     character(len=5), parameter :: vname1 = "T"
     character(len=5), parameter :: vname2 = "q"
 
-     OPATH = '/home/ojs9294/class/mirco_2020/Microphysics/exp/output'
+     OPATH = './output'
      WRITE(ONAME1,'(4A)') trim(OPATH),'/',trim(vname1),'_out.nc'
      WRITE(ONAME2,'(4A)') trim(OPATH),'/',trim(vname2),'_out.nc'
      call write_nc_data(ONAME1,vname1,nt,nz,z_full,T)

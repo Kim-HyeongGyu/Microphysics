@@ -43,26 +43,29 @@ contains
                                 z_full, &
                                  qv_in, &
                                temp_in, &
+                                  w_in, &
                                vert_in, &
                                  T_out, &
                                 qv_out, &
+                                 w_out, &
                                   Psfc  )
 
 !!!!! IN : character :: vert_var, temp_var
 !          integer   :: nz, nlev
-!          real, dimension(nlev) :: qv_in, temp_in, vert_in
+!          real, dimension(nlev) :: qv_in, temp_in, vert_in, w_in
 !          real, dimension(nz)   :: z_full
 !          real, parameter       :: Ps    ! [optional]
-!!!! OUT : real, dimension(nz)   :: T_out, qv_out
+!!!! OUT : real, dimension(nz)   :: T_out, qv_out, w_out
 
     implicit none
     character(len=10),      intent(in)  :: vert_var, temp_var     !! NAMELIST...??
     real, dimension(nlev), intent(in)  :: qv_in      ! [kg/kg]
     real, dimension(nlev), intent(in)  :: temp_in    ! [K]
+    real, dimension(nlev), intent(in)  :: w_in       ! [m/s]
     real, dimension(nlev), intent(in)  :: vert_in    ! P [hPa] or Z [m]
     real, dimension(nz),   intent(in)  :: z_full     ! [m]
     real, optional,        intent(in)  :: Psfc  ! [hPa] surface pressure
-    real, dimension(:),    intent(out), allocatable :: T_out, qv_out
+    real, dimension(:),    intent(out), allocatable :: T_out, qv_out, w_out
     real, dimension(nz)   :: z_out      ! for test
     real, dimension(nlev) :: z_in, T_in
     real, dimension(nlev) :: Tv         ! [K], virtual temperature
@@ -72,7 +75,7 @@ contains
     real    :: Ps   ! [hPa] surface pressure
 
 
-    allocate(T_out(nz), qv_out(nz))
+    allocate(T_out(nz), qv_out(nz),w_out(nz))
 !!!!! :: SETTING VARIABLE
 
     ! qv_in = 0.02
@@ -116,6 +119,7 @@ contains
                 d1 = z_full(i) - z_in(j)
                 d2 = z_in(j+1) - z_full(i)
                 z_out(i)  =  z_in(j)*(d2/(d1+d2)) +  z_in(j+1)*(d1/(d1+d2))
+                w_out(i)  =  w_in(j)*(d2/(d1+d2)) +  w_in(j+1)*(d1/(d1+d2))
                 T_out(i)  =  T_in(j)*(d2/(d1+d2)) +  T_in(j+1)*(d1/(d1+d2))
                 qv_out(i) = qv_in(j)*(d2/(d1+d2)) + qv_in(j+1)*(d1/(d1+d2))
             endif
@@ -123,6 +127,12 @@ contains
         ! print*, 'i : ', i, 'z_out : ', z_out(i), 'T_out : ', T_out(i),  'Q_out : ', qv_out(i)
     enddo
                
+    print*, 'w_in'
+    print*, w_in
+    print*, ''
+    print*, 'w_out'
+    print*, w_out
+
 
     end subroutine interpolate_1d
 end module vert_coordinate_mod

@@ -21,7 +21,7 @@ implicit none
     real, parameter :: rho = 1000.     ! [kg m-3] water density
 
     real, dimension(:),   allocatable :: z_full, z_half
-    real, dimension(:),   allocatable :: w, dz, Tinit, qinit
+    real, dimension(:),   allocatable :: w, dz, Tinit, qinit, winit
     real, dimension(:),   allocatable :: lev, temp_in, qv_in, w_in  
     real, dimension(:),   allocatable :: radius
     real, dimension(:,:), allocatable :: T, q

@@ -15,7 +15,7 @@ implicit none
 
     call read_namelist()
 
-    call read_data_init(nlev,lev,temp_in,qv_in,w)
+    call read_data_init(nlev,lev,temp_in,qv_in,w_in)
 
 
     ! Calculate dz
@@ -25,13 +25,14 @@ implicit none
     call conc_dist()
 
     ! Comupte dt using CFL conditin
-    call compute_dt_from_CFL(CFL_condition, dz, w, nt, dt)
+    call compute_dt_from_CFL(CFL_condition, dz, w_in, nt, dt)
 
     ! interplate 1d
-    call interpolate_1d(vert_var,temp_var,z_full,qv_in,temp_in,lev,Tinit,qinit)
-    allocate(T(nz,nt), q(nz,nt))
+    call interpolate_1d(vert_var,temp_var,z_full,qv_in,temp_in,w_in,lev,Tinit,qinit,winit)
+    allocate(T(nz,nt), q(nz,nt) )
     T(:,1) = Tinit
     q(:,1) = qinit
+    w = winit
 
     call show_setup_variables()    
 
