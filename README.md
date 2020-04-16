@@ -16,22 +16,21 @@ $ ./compile.csh     # First, set compiler and options.
 ├── doc    # documentation for box model.
 ├── src    # source code
 │   ├── main
-│   │   ├ constant.f90
 │   │   ├ driver.f90           # main code
-│   │   ├ file_io.f90
-│   │   ├ read_nc.f90
-│   │   ├ write_nc.f90
-│   │   ├ global.f90
-│   │   ├ initialize.f90
-│   │   ├ microphysics.f90 
-│   │   ├ vert_advection.f90
-│   │   └ vert_coordinate.f90       
+│   │   ├ global.f90           # variable setting
+│   │   ├ file_io.f90          # file I/O
+│   │   ├ read_nc.f90          # ├ 
+│   │   ├ write_nc.f90         # └ 
+│   │   ├ initialize.f90       # variable initialization
+│   │   ├ vert_coordinate.f90  # realize vertical coordinate
+│   │   ├ vert_advection.f90   # calculate vertical advection
+│   │   └ microphysics.f90     # concectration distribution
 │   └── user                   # Test directory for User
 └── exp
-    ├── compile.csh            # compile fortran code
+    ├── compile.csh            # compile fortran codes
     ├── input.nml              # namelist
     ├── input                  # For input data (T, w, q, ...)
-    ├── output                 # For input data (T, w, q, ...)
+    ├── output                 # For output data (T, w, q, ...)
     ├── run.x                  # Excute file
     └── exec                   # .mod, .o files
 
