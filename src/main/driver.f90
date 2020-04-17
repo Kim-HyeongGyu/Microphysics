@@ -24,17 +24,18 @@ implicit none
     call make_bins()
     call conc_dist()
 
+
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, w_in, nt, dt)
-
     ! interplate 1d
     call interpolate_1d(vert_var,temp_var,z_full,qv_in,temp_in,w_in,lev,Tinit,qinit,winit)
-    allocate(T(nz,nt), q(nz,nt) )
+    allocate(T(nz,nt), q(nz,nt), w(nz) )
     T(:,1) = Tinit
     q(:,1) = qinit
     w = winit
-
+ 
     call show_setup_variables()    
+
 
     ! Dynamic: time integration
     do n = 1, nt-1
@@ -43,6 +44,7 @@ implicit none
         call compute_advection(w, q(:,n), dt, nz, dz, &
                                vertical_advect, q(:,n+1))
     end do
+
 
     call write_data()
  

@@ -12,7 +12,7 @@ contains
         namelist /data_nml/     vert_var, temp_var
         namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
                                 vertical_grid, vertical_advect, &
-                                CFL_condition
+                                CFL_condition, status_case
         namelist /physics_nml/  rmin, rratio, nbin, Nc, qc,     &
                                 dist_type
 
@@ -34,7 +34,6 @@ contains
 
     integer,intent(out) :: nlev
     real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w_in
-    real, dimension(:),allocatable :: w
     character(len=5), parameter :: vname1 = "t"
     character(len=5), parameter :: vname2 = "q"
     character(len=5), parameter :: vname3 = "w"
@@ -54,20 +53,21 @@ contains
      call read_nc_data(INAME2,vname2,l_name,nlev,lev,qv_in)
      call read_nc_data(INAME3,vname3,l_name,nlev,lev,w_in)
 
+        ! Vertical wind [m s-1]
+      w_in      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
+!        w_in    = w_in*0. + 2.
 
 !      ========== ideal status ==============
-!        allocate(Tinit(nz), w(nz), qinit(nz))
-!        allocate(w(nlev))
+       if (status_case == "ideal") then
         ! Temperature   [K]
-!        Tinit(:) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
-
-        ! Vertical wind [m s-1]
-!        w      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
-!        w      = w*0. + 2.
+        temp_in = (/ (I+273, I = nlev,1,-1) /)  ! lapse rate 1K/km
 
         ! Mixing ratio  [kg kg-1]
-!       qinit(:) = w*0.
-!       qinit(5) = 10.
+        qv_in(:) = w_in*0.
+        qv_in(5) = 0.5
+        end if     
+
+
     end subroutine read_data_init   ! }}}
 
 
@@ -78,8 +78,8 @@ contains
     character(len=5), parameter :: vname2 = "q"
 
      OPATH = './output'
-     WRITE(ONAME1,'(4A)') trim(OPATH),'/',trim(vname1),'_out.nc'
-     WRITE(ONAME2,'(4A)') trim(OPATH),'/',trim(vname2),'_out.nc'
+     WRITE(ONAME1,'(10A)') trim(OPATH),'/',trim(vname1),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
+     WRITE(ONAME2,'(10A)') trim(OPATH),'/',trim(vname2),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
      call write_nc_data(ONAME1,vname1,nt,nz,z_full,T)
      call write_nc_data(ONAME2,vname2,nt,nz,z_full,q)
 

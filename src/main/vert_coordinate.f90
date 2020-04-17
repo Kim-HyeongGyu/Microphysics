@@ -127,11 +127,6 @@ contains
         ! print*, 'i : ', i, 'z_out : ', z_out(i), 'T_out : ', T_out(i),  'Q_out : ', qv_out(i)
     enddo
                
-    print*, 'w_in'
-    print*, w_in
-    print*, ''
-    print*, 'w_out'
-    print*, w_out
 
 
     end subroutine interpolate_1d

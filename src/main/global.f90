@@ -29,6 +29,7 @@ implicit none
     character(len=20) :: vertical_grid, vertical_advect
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
+    character(len=10) :: status_case
 
 public
 contains
@@ -36,6 +37,7 @@ contains
     subroutine show_setup_variables()
         print*, "========= Setup variables ========="
         print*, "Num of z-grid      : ", nz
+        print*, "Num of time        : ", nt
         print*, "Top of model       : ", ztop, " [m]"
         print*, "Grid type          : ", vertical_grid
         print*, "Integration method : ", vertical_advect
