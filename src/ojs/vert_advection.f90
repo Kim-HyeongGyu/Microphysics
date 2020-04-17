@@ -60,11 +60,12 @@ contains
     ! TODO: How to give boundary condition?
     ! Set Boundary Condition
     ! most likely w = 0 at these points
-    ! w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
-    w_half(1) = 2.; w_half(nz+1) = 2.
+     w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
+    ! w_half(1) = 2.; w_half(nz+1) = 2.
     ! flux(ks) = 0.; flux(ke+1) = 0.        ! Neumann BC
     flux(ks)   = w_half(ks)*C(ks)           ! do outflow boundary
     flux(ke+1) = w_half(ke+1)*C(ke)
+
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{
@@ -234,7 +235,6 @@ contains
         case default
             call error_mesg("No setup equation form.")
     end select  ! }}}
-
 
     end subroutine compute_advection ! }}}
 

@@ -1,66 +1,56 @@
-    program bin_microphysics
+module microphysics_mod
+use            global_mod !only: error_mesg
+contains
+    subroutine conc_dist()
+        real :: u, std, lamda, N0, r0
+        real :: umul
 
-    implicit none
+        allocate(Nr(nbin))
 
-!    character(len=*), intent(in) :: dist_type      ! IF USE NAMELIST...
-    integer :: nz, nbin = 40
-    real*8, dimension(nbin) :: N
-    real, dimension(nbin)   :: r , m, dr
-    real, dimension(nbin+1) :: rb, mb
-    real :: ratio=1.3   ! common ratio
-    real :: rmin=1E-6   ! [m]
-    real :: PI=3.141592
-    real :: N0 = 1.
-    real :: mu, lamda
-    real*8 :: ave, std
-    integer :: i
-    
-    rb(1)=rmin
-    do i = 1, nbin
-        rb(i+1) = rb(i)*ratio
-    enddo
-!    do i = 1, nbin+1                   ! TODO :: NEED MODIFY ! 
-!        mb(i) = (4./3.)*PI*rb(i)**3    !      :: m(i) = N(i)*(density of water)*(4/3)*(PI)*(r(i)^3)
-!    enddo
-    do i = 1, nbin
-        r(i)=(rb(i)+rb(i+1))/2.
-!        m(i)=(mb(i)+mb(i+1))/2.
-    enddo
+        select case (trim(dist_type))
+            ! 1) Log normal dist_type
+            case ("log_normal")
+                N0  = Nc
+                r0  = ( (3./(4.*PI))*(qc/Nc)*(1./rho) )**(1./3.)
+                u   = log(r0)
+                std = 2.5
+                ! TODO! std = 0 when use below formula
+                ! std = sqrt((1./3.)* &
+                !           ((2./3.)*log((3./4.)*qc/(PI*rho*N0)) -2*u))
+                Nr  = N0 / (sqrt(2*PI)*std*radius) &
+                    * exp(-( (log(radius)-u)**2 / (2*std**2) ))
+            ! 2) Gamma dist_type
+            case ("gamma_dist")
+                ! u     = 1.e9/Nc   ! Note small Nc makes infinity error
+                u     = 10.         ! usually, 2~15
+                umul  = (u+1)*(u+2)*(u+3)
+                N0    = ( Nc/gamma(u+1) ) &
+                      * ( (rho/qc)*(4./3.)*PI*Nc*umul )**((u+1)/3.)
+                lamda = ( (rho/qc)*(4./3.)*PI*Nc*umul )**(   1./3.)
+                Nr    = N0*radius**u*exp(-lamda*radius)
+            case default
+                call error_mesg("Not setup dist_type option. &
+                                 please check input.nml")
+        end select
+    end subroutine conc_dist
 
-!    select case (dist_type)
-!        case ("log_normal")
-            ave = 1. ; std = 0.
-            !ave = 1. ; std = 4.
-            do i = 1, nbin
-                ave = ave*r(i)
-            enddo
-            ave = log(ave**(1./nbin))
-            do i = 1, nbin
-                std = std + (log(r(i)-ave)**2)
-            enddo
-                std = sqrt(std/nbin)
-            do i = 1, nbin
-                !N(i) = (N0/(sqrt(2.*PI)*log(std)*r(i)))*(exp(-(((log(r(i))-log(ave))**2)/(2.*((log(std))**2)))))
-                N(i) = (N0/(sqrt(2.*PI)*std))*(exp(-((log(r(i))-ave)**2)/(2.*(std)**2)))
-                print*, i, N(i)
-            enddo
-   
-            OPEN(10, FILE='log-normal_dist.gdat', FORM='UNFORMATTED', ACCESS='DIRECT', &
-                    STATUS='UNKNOWN', RECL=8)
-            do i =1, nbin
-                WRITE(10, REC=i) N(i)
-            enddo
-!        case ("gamma")
-    
-            !mu = 0.1 ; lamda = 1.
-            !do i = 1, nbin
-            !N(i) = N0*(r(i)**mu)*(exp(-(lamda*r(i))))
-            !print*, i, N(i)
-            !enddo
-    
-            !OPEN(10, FILE='gamma_dist.gdat', FORM='UNFORMATTED', ACCESS='DIRECT', &
-            !         STATUS='UNKNOWN', RECL=4)
-            !do i =1, nbin
-            !   WRITE(10, REC=i) N(i)
-            !enddo
-    endprogram
+    subroutine make_bins()
+        real, dimension(nbin)   :: r    ! radius [m]
+        real, dimension(nbin)   :: m    ! mass   [kg]
+        real, dimension(nbin+1) :: rb   ! radius at boundary
+        real, dimension(nbin+1) :: mb   ! mass at boundary
+        real, parameter :: PI = 3.141592
+        real, parameter :: rho = 1000.  ! [kg m-3] water density
+
+        allocate(radius(nbin))
+        rb = (/ (rmin*(rratio**i), i=0,nbin) /)
+        mb = (4./3.)*pi*rho*rb**3
+
+        ! Interpolate using mass
+        do i = 1, nbin
+            m(i) = ( mb(i)+mb(i+1) ) / 2.
+            r(i) = ( (3./4)/(PI*rho)*m(i) )**(1./3.)
+        enddo
+        radius = r
+    end subroutine make_bins
+end module microphysics_mod

@@ -20,6 +20,7 @@ set execdir = exec
 
 if (! -d $execdir ) mkdir $execdir
 cd $execdir
+\rm ../ex.exe *.o 
 
 foreach mod ( $modules )
   ln -sf ../$mod
@@ -35,4 +36,3 @@ ln -sf ../input.nml
 $compiler $FFLAGS driver.f90 -o ../ex.exe *.o -L $NetCDF_LIB -lnetcdf -lnetcdff
 
 ../ex.exe
-\rm ../ex.exe *.o 

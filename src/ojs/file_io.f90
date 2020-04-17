@@ -12,13 +12,15 @@ contains
         namelist /data_nml/     vert_var, temp_var
         namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
                                 vertical_grid, vertical_advect, &
-                                CFL_condition
-        ! namelist /physics_nml/  rmin, ...
+                                CFL_condition, status_case
+        namelist /physics_nml/  rmin, rratio, nbin, Nc, qc,     &
+                                dist_type
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 
         read  (unit = 8, nml  = data_nml) 
         read  (unit = 8, nml  = dynamics_nml) 
+        read  (unit = 8, nml  = physics_nml) 
         close (unit = 8)
 
         ! Overide default values for optional arguments
@@ -28,18 +30,17 @@ contains
 
 
 
-    subroutine read_data_init(nlev,lev,temp_in,qv_in,w) ! {{{
+    subroutine read_data_init(nlev,lev,temp_in,qv_in,w_in) ! {{{
 
     integer,intent(out) :: nlev
-    real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w
-    real, dimension(:),allocatable :: w_in
+    real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w_in
     character(len=5), parameter :: vname1 = "t"
     character(len=5), parameter :: vname2 = "q"
     character(len=5), parameter :: vname3 = "w"
     character(len=300) :: INAME1, INAME2, INAME3, IPATH
     character(len=6) :: ld_name = "level", l_name= "lev" ! lev dimension_name, lev_var_name
 
-     IPATH = '/home/ojs9294/class/mirco_2020/Microphysics/exp/input'
+     IPATH = './input'
 
      WRITE(INAME1,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname1),'_AUG.nc'
      WRITE(INAME2,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname2),'_AUG.nc'
@@ -52,20 +53,21 @@ contains
      call read_nc_data(INAME2,vname2,l_name,nlev,lev,qv_in)
      call read_nc_data(INAME3,vname3,l_name,nlev,lev,w_in)
 
+        ! Vertical wind [m s-1]
+      w_in      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
+!        w_in    = w_in*0. + 2.
 
 !      ========== ideal status ==============
-!        allocate(Tinit(nz), w(nz), qinit(nz))
-        allocate(w(nlev))
+       if (status_case == "ideal") then
         ! Temperature   [K]
-!        Tinit(:) = (/ (I+273, I = nz,1,-1) /)  ! lapse rate 1K/km
-
-        ! Vertical wind [m s-1]
-!        w      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
-        w      = w*0. + 2.
+        temp_in = (/ (I+273, I = nlev,1,-1) /)  ! lapse rate 1K/km
 
         ! Mixing ratio  [kg kg-1]
-!       qinit(:) = w*0.
-!       qinit(5) = 10.
+        qv_in(:) = w_in*0.
+        qv_in(5) = 0.5
+        end if     
+
+
     end subroutine read_data_init   ! }}}
 
 
@@ -75,9 +77,9 @@ contains
     character(len=5), parameter :: vname1 = "T"
     character(len=5), parameter :: vname2 = "q"
 
-     OPATH = '/home/ojs9294/class/mirco_2020/Microphysics/exp/output'
-     WRITE(ONAME1,'(4A)') trim(OPATH),'/',trim(vname1),'_out.nc'
-     WRITE(ONAME2,'(4A)') trim(OPATH),'/',trim(vname2),'_out.nc'
+     OPATH = './output'
+     WRITE(ONAME1,'(10A)') trim(OPATH),'/',trim(vname1),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
+     WRITE(ONAME2,'(10A)') trim(OPATH),'/',trim(vname2),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
      call write_nc_data(ONAME1,vname1,nt,nz,z_full,T)
      call write_nc_data(ONAME2,vname2,nt,nz,z_full,q)
 
