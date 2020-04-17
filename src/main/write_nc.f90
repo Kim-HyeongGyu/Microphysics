@@ -18,10 +18,7 @@ CONTAINS
   INTEGER, dimension(2) :: dimids, start, count
   CHARACTER (LEN = 30) :: lname, units
 
-
 !============================================================= WRITE NC file
-
-  
 
  ! Create the netCDF file.
   CALL CHECK(nf90_create(trim(ONAME),nf90_clobber,ncid))
@@ -33,7 +30,6 @@ CONTAINS
  ! Define corrdinate variables
   CALL CHECK(nf90_def_var(ncid, "hgt", nf90_real, lev_dimid, lev_id))
   CALL CHECK(nf90_def_var(ncid, "time", nf90_real, time_dimid, time_id))
-
 
   dimids = (/lev_dimid, time_dimid/)
  ! Define variable
@@ -56,19 +52,11 @@ CONTAINS
   CALL CHECK(nf90_put_att(ncid,varid,"units",units))
   CALL CHECK(nf90_put_att(ncid,varid,"long_name",lname))
 
-
   CALL CHECK(nf90_enddef(ncid))  !End DEfinitions
-
-!   count = (/nz,1/)
-!   start = (/1,1/)
    
  ! Write Data
    CALL CHECK(nf90_put_var(ncid, lev_id, z_full))
-!   do rec = 1, nt
-!   start(2) = rec
    CALL CHECK(nf90_put_var(ncid,varid,var))
-!   CALL CHECK(nf90_put_var(ncid,varid,var,start=start,count= count))
-!   end do
    CALL CHECK(nf90_close(ncid))
 
   PRINT *,"*** SUCCESS writing file! ***"
