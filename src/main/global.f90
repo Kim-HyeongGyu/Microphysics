@@ -7,6 +7,7 @@ implicit none
     integer :: nt                     ! time step  [s]
     integer :: dt                     ! delta time [s]
     integer :: t_final                ! Last time  [s]
+    integer :: drop_var
     integer :: nbin
 
     real    :: top_of_atmosphere, ztop = 10000.

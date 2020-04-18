@@ -13,8 +13,8 @@ contains
         namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
                                 vertical_grid, vertical_advect, &
                                 CFL_condition, status_case
-        namelist /physics_nml/  rmin, rratio, nbin, Nc, qc,     &
-                                dist_type
+        namelist /physics_nml/  drop_var, rmin, rmax, rratio,   &
+                                nbin, Nc, qc, dist_type
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 
