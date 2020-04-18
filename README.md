@@ -37,8 +37,9 @@ $ ./compile.csh     # First, set compiler and options.
 ```
 
 ## TODO
-- [x] Make input/output file formate
-- [x] Realize bin structure using 
-- [x] Test advection code
-
+- [ ] Add namelist option(rmin, rmax, rratio)
+- [ ] Make bin number(~100)
+- [ ] Intrpolate P, T(or theta), RH for advection (+ adiabatic test)
+- [ ] Distribution (log, gamma)
+- [ ] Droplet growth (2020.04.21 10:00~)
 
