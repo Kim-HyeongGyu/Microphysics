@@ -39,8 +39,13 @@ contains
         real, dimension(nbin)   :: m    ! mass   [kg]
         real, dimension(nbin+1) :: rb   ! radius at boundary
         real, dimension(nbin+1) :: mb   ! mass at boundary
-        real, parameter :: PI = 3.141592
-        real, parameter :: rho = 1000.  ! [kg m-3] water density
+
+        if ( drop_var == 1 ) then
+            print*, "::: droplet variable used: rmin & rmax :::"
+            rratio = (rmax/rmin)**(1./nbin)
+        elseif ( drop_var == 2 ) then
+            print*, "::: droplet variable used: rmin & rratio :::"
+        endif
 
         allocate(radius(nbin))
         rb = (/ (rmin*(rratio**i), i=0,nbin) /)

@@ -20,10 +20,15 @@
 /
 
 &physics_nml
-    rmin = 1.e-6,       ! [m]
-    rratio = 1.26,
-    nbin = 40,
+    drop_var = 1, ! >> Choose what variables to use. <<
+                  ! [1] : rmin & rmax, [2] : rmin & rratio
+                  !  -> Even if you don't use a variable, 
+                  !     don't leave it blank.
+    rmin    = 1.e-6, ! [m]
+    rmax    = 1.e-2, ! [m]
+    rratio  = 1.258925,
+    nbin    = 100,
     dist_type = "log_normal",         ! "gamma_dist"
-    Nc = 1.e+8,
+    Nc = 1.e+8,      ! [# m-3]
     qc = 2.
 /
