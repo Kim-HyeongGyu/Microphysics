@@ -24,9 +24,9 @@ implicit none
     real, dimension(:),   allocatable :: z_full, z_half
     real, dimension(:),   allocatable :: w, dz, Tinit, qinit, winit
     real, dimension(:),   allocatable :: lev, temp_in, qv_in, w_in  
-    real, dimension(:),   allocatable :: radius
+    real, dimension(:),   allocatable :: radius, radius_boundary
     real, dimension(:,:), allocatable :: T, q
-    real, dimension(:),   allocatable :: Nr
+    real, dimension(:),   allocatable :: Nr, dN_dlnr
     character(len=20) :: vertical_grid, vertical_advect
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
