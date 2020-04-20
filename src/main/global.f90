@@ -14,18 +14,19 @@ implicit none
     real    :: zbottom = 0.
     real    :: CFL_condition = 0.5
     real    :: rmin, rmax, rratio, Nc, qc
+    real    :: Ps  = 1013.      ! [hPa] Surface pressure
 
-    real, parameter :: PI = 3.141592
-    real, parameter :: R  = 287.       ! [J kg-1 K-1]
-    real, parameter :: Cp = 1003.5     ! [J kg-1 K-1] specific heat at constant pressure
-    real, parameter :: g  = 9.8        ! [m s-2] gravity 
-    real, parameter :: rho = 1000.     ! [kg m-3] water density
+    real, parameter :: PI  = 3.141592
+    real, parameter :: R   = 287.       ! [J kg-1 K-1]
+    real, parameter :: Cp  = 1003.5     ! [J kg-1 K-1] specific heat at constant pressure
+    real, parameter :: g   = 9.8        ! [m s-2] gravity 
+    real, parameter :: rho = 1000.      ! [kg m-3] water density
 
     real, dimension(:),   allocatable :: z_full, z_half
-    real, dimension(:),   allocatable :: w, dz, Tinit, qinit, winit
+    real, dimension(:),   allocatable :: w, dz, Pinit, Thinit, qinit, winit
     real, dimension(:),   allocatable :: lev, temp_in, qv_in, w_in  
     real, dimension(:),   allocatable :: radius, radius_boundary
-    real, dimension(:,:), allocatable :: T, q
+    real, dimension(:,:), allocatable :: Th, T, q
     real, dimension(:),   allocatable :: Nr, dN_dlnr
     character(len=20) :: vertical_grid, vertical_advect
     character(len=10) :: vert_var, temp_var
