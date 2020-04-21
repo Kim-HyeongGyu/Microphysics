@@ -79,8 +79,40 @@ contains
             r(i) = ( (3./4)/(PI*rho)*m(i) )**(1./3.)
         enddo
 
-        radius = r
-        radius_boundary = rb
+        radius             = r
+        radius_boundary    = rb
+        ! TODO: add level index
+        mass(:,1)          = m
+        mass_boundary(:,1) = mb
 
     end subroutine make_bins
+
+    subroutine conc_growth(temp, qv, Pinit, dmdt)
+        implicit none
+        real, dimension(nz), intent(in)  :: temp, qv, Pinit
+        real, dimension(nz), intent(out) :: dmdt
+
+        real :: Rv, Dv, Ka, L
+        real, dimension(nz) :: e, es, RH, S, Fd, Fk
+
+        ! S     = RH - 1.
+        S     = 0.01                ! For test
+        ! temp  = 293.15              ! For test             [K]
+        Rv    = 462                 ! vapor gas constant   [J kg-1 K-1]
+        L     = 2.5e6               ! heat of vaporization [W m-2]
+        ! Refer to Yau (1996), 103p - Table 7.1
+        Dv    = 2.21e-5             ! Diffusion            [m2 s-1]
+        Ka    = 2.40e-2             ! Thermal conductivity [J m-1 s-1 K-1]
+
+        ! Refer to 대기열역학
+        e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
+        es    = 6.112 * exp(( 17.67*temp )/( temp+243.5 )) ! saturated e
+        Rh    = (e/es)*100          ! Relative humidity    [%]
+
+        Fd    = ( Rv*temp ) / (Dv*es)  
+        Fk    = ( L/(Rv*temp) - 1. ) * ( L/(Ka*temp) )
+        dmdt  = 4*PI*radius*(1./(Fd+Fk))*S
+        
+    end subroutine conc_growth
+
 end module microphysics_mod
