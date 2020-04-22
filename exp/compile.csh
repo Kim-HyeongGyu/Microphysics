@@ -4,10 +4,10 @@ set compiler = ifort         # "gfortran", "ifort", "pgf90"
 set src_dir  = "../src/main"  # direcory path (from current directory)
 set FFLAGS   = "-i4 -r8"
 
-#set NetCDF_LIB = ${NETCDF}/lib
-#set NetCDF_INC = ${NETCDF}/include
-set NetCDF_LIB = /usr/local/netcdf/432_intel15/lib
-set NetCDF_INC = /usr/local/netcdf/432_intel15/include
+set NetCDF_LIB = ${NETCDF}/lib
+set NetCDF_INC = ${NETCDF}/include
+# set NetCDF_LIB = /usr/local/netcdf/432_intel15/lib
+# set NetCDF_INC = /usr/local/netcdf/432_intel15/include
 
 
 set modules  = (         global.f90 \

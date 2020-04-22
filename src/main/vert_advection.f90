@@ -222,12 +222,14 @@ contains
     select case (eqn_form)
         case ("FLUX_FORM")
             do k = ks, ke
-                dC_dt     = - (flux(k+1) - flux(k)) / dz(k)
+                ! Note: for conserve quantity, dz index is different.
+                !      Discuss with minwoo (2020.04.20)
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
                 next_C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")
             do k = ks, ke
-                dC_dt     = - ( flux(k+1) - flux(k) )          / dz(k) &
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) ) &
                             - ( C(k)*(w_half(k+1)-w_half(k)) ) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt
             end do
