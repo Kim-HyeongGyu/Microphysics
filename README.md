@@ -19,8 +19,8 @@ $ ./compile.csh     # First, set compiler and options.
 │   │   ├ driver.f90           # main code
 │   │   ├ global.f90           # variable setting
 │   │   ├ file_io.f90          # file I/O
-│   │   ├ read_nc.f90          # ├ 
-│   │   ├ write_nc.f90         # └ 
+│   │   ├ read_nc.f90
+│   │   ├ write_nc.f90
 │   │   ├ initialize.f90       # variable initialization
 │   │   ├ vert_coordinate.f90  # realize vertical coordinate
 │   │   ├ vert_advection.f90   # calculate vertical advection
@@ -37,9 +37,9 @@ $ ./compile.csh     # First, set compiler and options.
 ```
 
 ## TODO
-- [ ] Add namelist option(rmin, rmax, rratio)
-- [ ] Make bin number(~100)
-- [ ] Intrpolate P, T(or theta), RH for advection (+ adiabatic test)
-- [ ] Distribution (log, gamma)
-- [ ] Droplet growth (2020.04.21 10:00~)
+- [x] Add namelist option(rmin, rmax, rratio)
+- [x] Make bin number(~100)
+- [x] Intrpolate P, T(or theta), RH for advection (+ adiabatic test)
+- [x] Distribution (log, gamma)
+- [x] Droplet growth (2020.04.21 10:00~) `testing...`
 
