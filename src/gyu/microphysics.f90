@@ -93,7 +93,8 @@ contains
         real, dimension(nz), intent(out) :: dmdt
 
         real :: Rv, Dv, Ka, L
-        real, dimension(nz) :: e, es, RH, S, Fd, Fk
+        real, dimension(nz)   :: e, es, RH, S, Fd, Fk
+        real, dimension(nbin) :: Vf
 
         ! S     = RH - 1.
         S     = 0.01                ! For test
@@ -111,8 +112,45 @@ contains
 
         Fd    = ( Rv*temp ) / (Dv*es)  
         Fk    = ( L/(Rv*temp) - 1. ) * ( L/(Ka*temp) )
-        dmdt  = 4*PI*radius*(1./(Fd+Fk))*S
+
+        Vf    = 1.
+        if (ventilation_effect) then
+            call ventilation(Vf)
+        end if
+
+        dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
         
     end subroutine conc_growth
+
+    subroutine ventilation(Vf)
+    ! Reference
+    ! https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
+        implicit none
+        real, dimension(nbin), intent(inout) :: Vf     ! ventilation effect
+        real, dimension(nbin) :: Vt, Re
+        real :: rho_liquid, rho_air, gravity
+        real :: Cd, mu
+
+        rho_liquid = 1000.     ! [kg m-3] water density
+        rho_air    = 1.225     ! [kg m-3] air density
+        gravity    = 9.8
+
+        ! Assumed constant drag coefficient at large Re.
+        Cd = 0.45              ! Drag coefficient 
+
+        ! Note! We assumed that all drop shape is sphere.
+        Vt = sqrt( (8./3.)*(radius*gravity*rho_liquid)  &
+                          /(rho_air*Cd) )   ! Yau (1996) equation 8.4
+        mu = 1.729e-5          ! [kg m-1 s-1] 
+                               ! dynamic viscosity of air (at 273 [K]) 
+        Re = 2*rho_air*radius*Vt/mu         ! Yau (1996) 116p
+
+        if ( any(0 <= Re .and. Re < 2.5) ) then
+            Vf = 1.0 + 0.09*Re
+        else ! if (Re > 2.5) then
+            Vf = 0.78 + 0.28*sqrt(Re)
+        end if
+        
+    end subroutine ventilation
 
 end module microphysics_mod
