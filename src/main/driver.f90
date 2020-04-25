@@ -57,7 +57,7 @@ implicit none
         call conc_growth(T(:,n+1), q(:,n+1), Pinit(:), dm_dt(:))
         mass(:,n+1) = mass(:,n) + dm_dt(1)*dt
         ! print*, dm_dt(1)
-        ! print*, mass(:2,n)
+        ! print*, mass(:,n)
     end do
 
     call write_data()

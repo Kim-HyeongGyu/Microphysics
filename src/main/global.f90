@@ -34,6 +34,7 @@ implicit none
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
     character(len=10) :: status_case
+    logical           :: ventilation_effect
 
 public
 contains

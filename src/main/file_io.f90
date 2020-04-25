@@ -14,7 +14,8 @@ contains
                                 vertical_grid, vertical_advect, &
                                 CFL_condition, status_case
         namelist /physics_nml/  drop_var, rmin, rmax, rratio,   &
-                                nbin, Nc, qc, dist_type
+                                nbin, Nc, qc, dist_type,        &
+                                ventilation_effect
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 
@@ -76,6 +77,7 @@ contains
     character(len=300) :: ONAME1, ONAME2, OPATH
     character(len=5), parameter :: vname1 = "T"
     character(len=5), parameter :: vname2 = "q"
+    character(len=5), parameter :: vname3 = "mass"
 
      OPATH = './output'
      WRITE(ONAME1,'(10A)') trim(OPATH),'/',trim(vname1),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
