@@ -92,17 +92,16 @@ contains
         real, dimension(nz), intent(in)  :: temp, qv, Pinit
         real, dimension(nz), intent(out) :: dmdt
 
-        real :: Rv, Dv, Ka, L
-        real, dimension(nz)   :: e, es, RH, S, Fd, Fk
+        real, dimension(nz)   :: e, es, RH, S, Fk, Fd
         real, dimension(nbin) :: Vf
-
-        ! S     = RH - 1.
-        S     = 0.01                ! For test
 
         call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
-        Rh    = (e/es)*100          ! Relative humidity    [%]
+        RH    = (e/es)*100          ! Relative humidity    [%]
         
+        ! S     = RH - 1.
+        S     = 0.01                ! For test
+
         Vf    = 1.
         if (ventilation_effect) then
             call ventilation(Vf)
