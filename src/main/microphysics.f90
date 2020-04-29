@@ -98,21 +98,11 @@ contains
 
         ! S     = RH - 1.
         S     = 0.01                ! For test
-        ! temp  = 293.15              ! For test             [K]
-        Rv    = 462                 ! vapor gas constant   [J kg-1 K-1]
-        L     = 2.5e6               ! heat of vaporization [W m-2]
-        ! Refer to Yau (1996), 103p - Table 7.1
-        Dv    = 2.21e-5             ! Diffusion            [m2 s-1]
-        Ka    = 2.40e-2             ! Thermal conductivity [J m-1 s-1 K-1]
 
-        ! Refer to 대기열역학
+        call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
-        es    = 6.112 * exp(( 17.67*temp )/( temp+243.5 )) ! saturated e
         Rh    = (e/es)*100          ! Relative humidity    [%]
-
-        Fd    = ( Rv*temp ) / (Dv*es)  
-        Fk    = ( L/(Rv*temp) - 1. ) * ( L/(Ka*temp) )
-
+        
         Vf    = 1.
         if (ventilation_effect) then
             call ventilation(Vf)
@@ -121,6 +111,28 @@ contains
         dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
         
     end subroutine conc_growth
+
+    subroutine cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd)
+        implicit none
+        real, dimension(nz), intent(in)  :: temp, Pinit
+        real, dimension(nz), intent(out) :: es, Fk, Fd
+        
+        real :: L, Rv, Ka, Dv
+        
+        L  = 2500297.8  ! heat of vaporization [J kg-1]
+        Rv = 467        ! vapor gas constant   [J kg-1 K-1]
+
+        ! Refer to Rogers & Yau (1996), 103p - Table 7.1 (T=273K)
+        Ka = 2.40e-2    ! coefficient of thermal conductivity of air    [J m-1 s-1 K-1]
+        Dv = 2.21e-5    ! molecular diffusion coefficient               [m2 s-1]
+
+        es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
+        ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
+
+        Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
+        Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
+        
+    end subroutine cal_es_Fk_Fd
 
     subroutine ventilation(Vf)
     ! Reference
