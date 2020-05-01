@@ -92,35 +92,51 @@ contains
         real, dimension(nz), intent(in)  :: temp, qv, Pinit
         real, dimension(nz), intent(out) :: dmdt
 
-        real :: Rv, Dv, Ka, L
-        real, dimension(nz)   :: e, es, RH, S, Fd, Fk
+        real, dimension(nz)   :: e, es, RH, S, Fk, Fd
         real, dimension(nbin) :: Vf
 
+        call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
+        e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
+        RH    = (e/es)*100          ! Relative humidity    [%]
+        
         ! S     = RH - 1.
         S     = 0.01                ! For test
-        ! temp  = 293.15              ! For test             [K]
-        Rv    = 462                 ! vapor gas constant   [J kg-1 K-1]
-        L     = 2.5e6               ! heat of vaporization [W m-2]
-        ! Refer to Yau (1996), 103p - Table 7.1
-        Dv    = 2.21e-5             ! Diffusion            [m2 s-1]
-        Ka    = 2.40e-2             ! Thermal conductivity [J m-1 s-1 K-1]
-
-        ! Refer to 대기열역학
-        e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
-        es    = 6.112 * exp(( 17.67*temp )/( temp+243.5 )) ! saturated e
-        Rh    = (e/es)*100          ! Relative humidity    [%]
-
-        Fd    = ( Rv*temp ) / (Dv*es)  
-        Fk    = ( L/(Rv*temp) - 1. ) * ( L/(Ka*temp) )
 
         Vf    = 1.
         if (ventilation_effect) then
             call ventilation(Vf)
         end if
 
+        ! TODO: size(dmdt) /= size(Vf)
         dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
+        ! print*, size(Vf)
+        ! print*, size(dmdt)
+        ! print*, size(radius*(1./(Fd+Fk))*S*Vf)
+        ! stop
         
     end subroutine conc_growth
+
+    subroutine cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd)
+        implicit none
+        real, dimension(nz), intent(in)  :: temp, Pinit
+        real, dimension(nz), intent(out) :: es, Fk, Fd
+        
+        real :: L, Rv, Ka, Dv
+        
+        L  = 2500297.8  ! heat of vaporization [J kg-1]
+        Rv = 467        ! vapor gas constant   [J kg-1 K-1]
+
+        ! Refer to Rogers & Yau (1996), 103p - Table 7.1 (T=273K)
+        Ka = 2.40e-2    ! coefficient of thermal conductivity of air    [J m-1 s-1 K-1]
+        Dv = 2.21e-5    ! molecular diffusion coefficient               [m2 s-1]
+
+        es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
+        ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
+
+        Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
+        Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
+        
+    end subroutine cal_es_Fk_Fd
 
     subroutine ventilation(Vf)
     ! Reference
@@ -136,13 +152,18 @@ contains
         gravity    = 9.8
 
         ! Assumed constant drag coefficient at large Re.
-        Cd = 0.45              ! Drag coefficient 
+        Cd = 0.45              ! Yau (1996) 125p
 
         ! Note! We assumed that all drop shape is sphere.
         Vt = sqrt( (8./3.)*(radius*gravity*rho_liquid)  &
                           /(rho_air*Cd) )   ! Yau (1996) equation 8.4
-        mu = 1.729e-5          ! [kg m-1 s-1] 
-                               ! dynamic viscosity of air (at 273 [K]) 
+
+        ! TODO: add input variable (temperature)
+        ! dynamic viscosity of air (See Yau (1996) 102-103p)
+        ! mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+
+        ! Reynolds number
         Re = 2*rho_air*radius*Vt/mu         ! Yau (1996) 116p
 
         if ( any(0 <= Re .and. Re < 2.5) ) then

@@ -107,7 +107,12 @@ contains
             call ventilation(Vf)
         end if
 
+        ! TODO: size(dmdt) /= size(Vf)
         dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
+        ! print*, size(Vf)
+        ! print*, size(dmdt)
+        ! print*, size(radius*(1./(Fd+Fk))*S*Vf)
+        ! stop
         
     end subroutine conc_growth
 
@@ -147,13 +152,18 @@ contains
         gravity    = 9.8
 
         ! Assumed constant drag coefficient at large Re.
-        Cd = 0.45              ! Drag coefficient 
+        Cd = 0.45              ! Yau (1996) 125p
 
         ! Note! We assumed that all drop shape is sphere.
         Vt = sqrt( (8./3.)*(radius*gravity*rho_liquid)  &
                           /(rho_air*Cd) )   ! Yau (1996) equation 8.4
-        mu = 1.729e-5          ! [kg m-1 s-1] 
-                               ! dynamic viscosity of air (at 273 [K]) 
+
+        ! TODO: add input variable (temperature)
+        ! dynamic viscosity of air (See Yau (1996) 102-103p)
+        ! mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+
+        ! Reynolds number
         Re = 2*rho_air*radius*Vt/mu         ! Yau (1996) 116p
 
         if ( any(0 <= Re .and. Re < 2.5) ) then
