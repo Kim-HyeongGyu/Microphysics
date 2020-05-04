@@ -30,7 +30,7 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz), dm_dt(nz))
+    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz), dm_dt(nbin,nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
     q(:,1)  = qinit
@@ -39,7 +39,7 @@ implicit none
 !    q(5,1) = 100.
     w       = 1.
  
-    allocate(mass(nbin,nt))
+    allocate(mass(nbin,nz,nt))
     call make_bins()
     call conc_dist()
 
@@ -47,17 +47,20 @@ implicit none
 
     ! Dynamic: time integration
     do n = 1, nt-1
-        call compute_advection(w, Th(:,n), dt, nz, dz, &
-                               vertical_advect, Th(:,n+1))
-        call compute_advection(w, q(:,n), dt, nz, dz, &
-                               vertical_advect, q(:,n+1))
+        call compute_advection( w, Th(:,n), dt, nz, dz,    &
+                                vertical_advect, Th(:,n+1) )
+        call compute_advection( w, q(:,n), dt, nz, dz,     &
+                                vertical_advect,  q(:,n+1) )
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
 
-        T  = 293.15 ! For test [K]
-        call conc_growth(T(:,n+1), q(:,n+1), Pinit(:), dm_dt(:))
-        mass(:,n+1) = mass(:,n) + dm_dt(1)*dt
+        ! T  = 293.15 ! For test [K]
+        do k = 1, nz 
+            call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), dm_dt(:,k))
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
+        end do
         ! print*, dm_dt(1)
-        ! print*, mass(:,n)
+        ! print*, size(mass)
+        ! print*, nbin, nz, nt
     end do
 
     call write_data()

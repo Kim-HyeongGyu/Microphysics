@@ -81,18 +81,19 @@ contains
 
         radius             = r
         radius_boundary    = rb
-        ! TODO: add level index
-        mass(:,1)          = m
-        mass_boundary(:,1) = mb
+        do k = 1, nz
+            mass(:,k,1)          = m
+            mass_boundary(:,k,1) = mb
+        end do
 
     end subroutine make_bins
 
     subroutine conc_growth(temp, qv, Pinit, dmdt)
         implicit none
-        real, dimension(nz), intent(in)  :: temp, qv, Pinit
-        real, dimension(nz), intent(out) :: dmdt
+        real,                  intent(in)  :: temp, qv, Pinit
+        real, dimension(nbin), intent(out) :: dmdt
 
-        real, dimension(nz)   :: e, es, RH, S, Fk, Fd
+        real                  :: e, es, RH, S, Fk, Fd
         real, dimension(nbin) :: Vf
 
         call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
@@ -103,23 +104,17 @@ contains
         S     = 0.01                ! For test
 
         Vf    = 1.
-        if (ventilation_effect) then
-            call ventilation(Vf)
+        if (ventilation_effect) then 
+            call ventilation(temp, Vf)
         end if
-
-        ! TODO: size(dmdt) /= size(Vf)
         dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
-        ! print*, size(Vf)
-        ! print*, size(dmdt)
-        ! print*, size(radius*(1./(Fd+Fk))*S*Vf)
-        ! stop
         
     end subroutine conc_growth
 
     subroutine cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd)
         implicit none
-        real, dimension(nz), intent(in)  :: temp, Pinit
-        real, dimension(nz), intent(out) :: es, Fk, Fd
+        real, intent(in)  :: temp, Pinit
+        real, intent(out) :: es, Fk, Fd
         
         real :: L, Rv, Ka, Dv
         
@@ -138,10 +133,11 @@ contains
         
     end subroutine cal_es_Fk_Fd
 
-    subroutine ventilation(Vf)
+    subroutine ventilation(T, Vf)
     ! Reference
     ! https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
         implicit none
+        real,                  intent(in   ) :: T      ! Temperature [K]
         real, dimension(nbin), intent(inout) :: Vf     ! ventilation effect
         real, dimension(nbin) :: Vt, Re
         real :: rho_liquid, rho_air, gravity
@@ -160,8 +156,8 @@ contains
 
         ! TODO: add input variable (temperature)
         ! dynamic viscosity of air (See Yau (1996) 102-103p)
-        ! mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
-        mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+        mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        ! mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
 
         ! Reynolds number
         Re = 2*rho_air*radius*Vt/mu         ! Yau (1996) 116p

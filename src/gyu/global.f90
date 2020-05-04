@@ -22,14 +22,15 @@ implicit none
     real, parameter :: g   = 9.8        ! [m s-2] gravity 
     real, parameter :: rho = 1000.      ! [kg m-3] water density
 
-    real, dimension(:),   allocatable :: z_full, z_half
-    real, dimension(:),   allocatable :: w, dz, Pinit, Thinit, qinit, winit
-    real, dimension(:),   allocatable :: lev, temp_in, qv_in, w_in  
-    real, dimension(:),   allocatable :: radius, radius_boundary
-    real, dimension(:,:), allocatable :: mass, mass_boundary
-    real, dimension(:,:), allocatable :: Th, T, q
-    real, dimension(:),   allocatable :: Nr, dN_dlnr
-    real, dimension(:),   allocatable :: dm_dt
+    real, dimension(:),     allocatable :: z_full, z_half
+    real, dimension(:),     allocatable :: w, dz, Pinit, Thinit, qinit, winit
+    real, dimension(:),     allocatable :: lev, temp_in, qv_in, w_in  
+    real, dimension(:),     allocatable :: radius, radius_boundary
+    ! real, dimension(:,:), allocatable :: mass, mass_boundary 
+    real, dimension(:,:,:), allocatable :: mass, mass_boundary 
+    real, dimension(:,:),   allocatable :: Th, T, q
+    real, dimension(:),     allocatable :: Nr, dN_dlnr
+    real, dimension(:,:),   allocatable :: dm_dt
     character(len=20) :: vertical_grid, vertical_advect
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
