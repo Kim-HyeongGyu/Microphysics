@@ -25,8 +25,14 @@ contains
             z_full = z_half(1:nz) + dz/2.
         case ("stretching")
             dz(1) = ztop*(dzr-1)/(dzr**nz-1)
-            do k = 2, nz+1
+            do k = 2, nz
                 dz(k) = dz(k-1)*dzr
+            end do
+            ! TODO: optimization
+            ! z_half(2:nz+1) = z_half(1:nz) + dz(1:nz)
+            ! z_full(1:nz)   = z_half(1:nz) + dz(1:nz)/2.
+            do k = 2, nz+1
+                ! dz(k) = dz(k-1)*dzr   ! size(dz) /= nz+1
                 z_half(k) = z_half(k-1) + dz(k-1)
                 z_full(k-1) = z_half(k-1) + dz(k-1)/2.
             end do
