@@ -16,7 +16,7 @@
     vertical_advect   = "PPM",        ! "finite_difference", "finite_volume", "PPM"
     CFL_condition     = 0.5           ! courant number 
                                       ! (Courant–Friedrichs–Lewy condition)
-    status_case = "real"              ! "ideal", "real"   T,q status
+    status_case = "ideal"              ! "ideal", "real"   T,q status
 /
 
 &physics_nml
@@ -31,5 +31,6 @@
     dist_type = "log_normal",         ! "gamma_dist"
     Nc = 1.e+8,      ! [# m-3]
     qc = 2.,
-    ventilation_effect = .true.
+    ventilation_effect = .true.,
+    mass_scheme = "FVM"               ! "interpolation", "FVM", "PPM"
 /

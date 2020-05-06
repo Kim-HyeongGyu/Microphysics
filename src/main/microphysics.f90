@@ -81,19 +81,20 @@ contains
 
         radius             = r
         radius_boundary    = rb
-        ! TODO: add level index
         mass(:,1)          = m
         mass_boundary(:,1) = mb
 
     end subroutine make_bins
 
-    subroutine conc_growth(temp, qv, Pinit, dmdt)
+    subroutine conc_growth(temp, qv, Pinit, dm_dt, dmb_dt)
         implicit none
-        real, dimension(nz), intent(in)  :: temp, qv, Pinit
-        real, dimension(nz), intent(out) :: dmdt
+        real,                    intent(in)  :: temp, qv, Pinit
+        real, dimension(nbin),   intent(out) :: dm_dt
+        real, dimension(nbin+1), intent(out) :: dmb_dt
 
-        real, dimension(nz)   :: e, es, RH, S, Fk, Fd
-        real, dimension(nbin) :: Vf
+        real                    :: e, es, RH, S, Fk, Fd
+        real, dimension(nbin)   :: Vf
+        real, dimension(nbin+1) :: Vfb
 
         call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
@@ -102,24 +103,20 @@ contains
         ! S     = RH - 1.
         S     = 0.01                ! For test
 
-        Vf    = 1.
-        if (ventilation_effect) then
-            call ventilation(Vf)
+        Vf = 1.; Vfb = 1.
+        if (ventilation_effect) then 
+            call ventilation(temp, radius, Vf)
+            call ventilation(temp, radius_boundary, Vfb)
         end if
+        dm_dt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
+        dmb_dt = 4*PI*radius_boundary*(1./(Fd+Fk))*S*Vfb
 
-        ! TODO: size(dmdt) /= size(Vf)
-        dmdt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
-        ! print*, size(Vf)
-        ! print*, size(dmdt)
-        ! print*, size(radius*(1./(Fd+Fk))*S*Vf)
-        ! stop
-        
     end subroutine conc_growth
 
     subroutine cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd)
         implicit none
-        real, dimension(nz), intent(in)  :: temp, Pinit
-        real, dimension(nz), intent(out) :: es, Fk, Fd
+        real, intent(in)  :: temp, Pinit
+        real, intent(out) :: es, Fk, Fd
         
         real :: L, Rv, Ka, Dv
         
@@ -138,12 +135,14 @@ contains
         
     end subroutine cal_es_Fk_Fd
 
-    subroutine ventilation(Vf)
+    subroutine ventilation(T, r, Vf)
     ! Reference
     ! https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
         implicit none
-        real, dimension(nbin), intent(inout) :: Vf     ! ventilation effect
-        real, dimension(nbin) :: Vt, Re
+        real,               intent(in   ) :: T      ! Temperature [K]
+        real, dimension(:), intent(in   ) :: r      ! radius      [m]
+        real, dimension(:), intent(inout) :: Vf     ! ventilation effect
+        real, dimension(size(r)) :: Vt, Re
         real :: rho_liquid, rho_air, gravity
         real :: Cd, mu
 
@@ -155,16 +154,15 @@ contains
         Cd = 0.45              ! Yau (1996) 125p
 
         ! Note! We assumed that all drop shape is sphere.
-        Vt = sqrt( (8./3.)*(radius*gravity*rho_liquid)  &
+        Vt = sqrt( (8./3.)*(r*gravity*rho_liquid)  &
                           /(rho_air*Cd) )   ! Yau (1996) equation 8.4
 
-        ! TODO: add input variable (temperature)
         ! dynamic viscosity of air (See Yau (1996) 102-103p)
-        ! mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
-        mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+        mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        ! mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
 
         ! Reynolds number
-        Re = 2*rho_air*radius*Vt/mu         ! Yau (1996) 116p
+        Re = 2*rho_air*r*Vt/mu         ! Yau (1996) 116p
 
         if ( any(0 <= Re .and. Re < 2.5) ) then
             Vf = 1.0 + 0.09*Re
