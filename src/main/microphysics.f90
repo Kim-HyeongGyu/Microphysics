@@ -172,4 +172,23 @@ contains
         
     end subroutine ventilation
 
+    subroutine compute_mass()
+        ! 1) interpolation
+        ! 2) advection
+        select case (mass_scheme)
+            case ("interpolation")
+                stop
+            case ("FVM")
+                ! call mass_advection(dmb_dt, N, dt, nbin, &
+                !                   dm, "finite_volume", next_N)
+                stop
+            case ("PPM")
+                ! call mass_advection(dmb_dt, N, dt, nbin, &
+                !                   dm, "finite_volume", next_N)
+                stop
+            case default
+                
+        end select 
+    end subroutine compute_mass
+
 end module microphysics_mod

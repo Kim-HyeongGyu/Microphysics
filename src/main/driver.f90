@@ -11,7 +11,7 @@ use   vert_coordinate_mod, only: compute_vert_coord , &
                                  interpolate_1d
 use         advection_mod, only: compute_advection
 use      microphysics_mod, only: make_bins, conc_dist, &
-                                 conc_growth
+                                 conc_growth, compute_mass
 implicit none
 
     call read_namelist()
@@ -59,10 +59,7 @@ implicit none
             call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
                              dm_dt(:,k), dmb_dt(:,k))
         end do
-        ! print*, dm_dt(1)
-        ! print*, size(mass)
-        ! print*, nbin, nz, nt
-
+        ! TODO: Make code for mass
         ! call compute_mass()
     end do
 
