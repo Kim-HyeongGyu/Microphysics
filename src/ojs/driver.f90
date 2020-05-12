@@ -45,9 +45,10 @@ implicit none
 
     call show_setup_variables()    
 
-    print*, Nr
+!    print*, Nr
 
-    open(99,file='nr_test.txt',status='unknown')
+    
+    open(99,file='nr_log.txt',status='unknown')
     write(99,'(<nbin>e20.3)') Nr
     ! Dynamic: time integration
     do n = 1, nt-1

@@ -143,6 +143,8 @@ contains
         !    print*,"i=",i,"Nr(i)=",Nr(i),"Nr(i+1)=",Nr(i+1),"next_N(i)=",next_N(i)
         end do
 
+
+
         next_N(nbin) = Nr(nbin)+y(nbin-1)
         !print*,Nr(nbin),y(nbin-1),next_N(nbin)
         Nr = next_N
