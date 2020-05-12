@@ -1,7 +1,7 @@
 #!/bin/csh -f
 
 set compiler = ifort         # "gfortran", "ifort", "pgf90"
-set src_dir  = "../src/main"  # direcory path (from current directory)
+set src_dir  = "../src/main" # direcory path (from current directory)
 set FFLAGS   = "-i4 -r8"
 
 set NetCDF_LIB = ${NETCDF}/lib
@@ -40,4 +40,4 @@ $compiler $FFLAGS driver.f90 -o ../run.x *.o -L $NetCDF_LIB -lnetcdf -lnetcdff
 cd .. 
 # ============================================================================
 
-./run.x
+./run.x # >! run.log
