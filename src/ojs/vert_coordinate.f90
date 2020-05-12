@@ -45,7 +45,8 @@ contains
                                temp_in, &
                                   w_in, &
                                vert_in, &
-                                 T_out, &
+                                 P_out, &
+                                Th_out, &
                                 qv_out, &
                                  w_out, &
                                   Psfc  )
@@ -55,7 +56,7 @@ contains
 !          real, dimension(nlev) :: qv_in, temp_in, vert_in, w_in
 !          real, dimension(nz)   :: z_full
 !          real, parameter       :: Ps    ! [optional]
-!!!! OUT : real, dimension(nz)   :: T_out, qv_out, w_out
+!!!! OUT : real, dimension(nz)   :: P_out, T_out, Th_out, qv_out, w_out
 
     implicit none
     character(len=10),      intent(in)  :: vert_var, temp_var     !! NAMELIST...??
@@ -65,18 +66,16 @@ contains
     real, dimension(nlev), intent(in)  :: vert_in    ! P [hPa] or Z [m]
     real, dimension(nz),   intent(in)  :: z_full     ! [m]
     real, optional,        intent(in)  :: Psfc  ! [hPa] surface pressure
-    real, dimension(:),    intent(out), allocatable :: T_out, qv_out, w_out
-    real, dimension(nz)   :: z_out      ! for test
-    real, dimension(nlev) :: z_in, T_in
+    real, dimension(:),    intent(out), allocatable :: P_out, Th_out, qv_out, w_out
+    real, dimension(nlev) :: z_in, P_in, T_in, Th_in
     real, dimension(nlev) :: Tv         ! [K], virtual temperature
     real, dimension(nlev) :: H          ! [m] scale height
     integer :: i, j
     real    :: d1, d2
-    real    :: Ps   ! [hPa] surface pressure
 
+    allocate(P_out(nz), Th_out(nz), qv_out(nz), w_out(nz))
 
-    allocate(T_out(nz), qv_out(nz),w_out(nz))
-!!!!! :: SETTING VARIABLE
+!!! :: SETTING VARIABLE for test
 
     ! qv_in = 0.02
     ! temp_in(1) = 298.
@@ -88,46 +87,56 @@ contains
     !     vert_in(i+1) = vert_in(i) - 25.
     ! enddo 
 
-!!!!! :: (VARIABLES) to (z, T, qv)
-    Ps = 1013.; if (present(Psfc)) Ps = Psfc
+!!! :: (VARIABLES) to (z, P, T, theta, qv, RH)
 
-    if ( vert_var == 'p' ) then
-        Tv = temp_in*(1+(0.61*qv_in))
-        H = (R*Tv)/g
-        z_in = -H*(log(vert_in/Ps)) 
-    else
-        z_in = vert_in
-    endif
-   
+    if (present(Psfc)) Ps = Psfc
 
-    if ( temp_var == 'theta' ) then
-        if ( vert_var == 'p' ) then 
-            T_in = temp_in*((vert_in/Ps)**(R/Cp))
-        else
-            print*, " :: Without air pressure information,"
-            print*, " ::  'Temp' can't be calculated from 'theta'."
-            print*, " :: Please Check the 'vertical variable'."
+    if (vert_var == 'p' ) then
+        if (temp_var == 'theta' ) then  ! input data : P[hPa] & theta[K]
+            Th_in = temp_in
+            P_in  = vert_in
+            T_in  = Th_in*((P_in/Ps)**(R/Cp))
+            Tv    = T_in*(1+(0.61*qv_in))
+            H     = (R*Tv)/g
+            z_in  = -H*(log(P_in/Ps))
+        else                            ! input data : P[hPa] & T[K]
+            P_in = vert_in
+            T_in = temp_in
+            Tv   = T_in*(1+(0.61*qv_in))
+            H    = (R*Tv)/g
+            z_in = -H*(log(P_in/Ps))
+            Th_in = T_in*((Ps/P_in)**(R/cp))
         endif
     else
-        T_in = temp_in    
+        if (temp_var == 'theta' ) then  ! input data : z[m] & theta[K]
+            print*, ":: INPUT DATA VARIABLE ERROR ::"
+            print*, ":: 'Pres' is calculated using 'Temp', and"
+            print*, ":: 'Temp' is calculated using 'Pres'."
+            print*, ":: Please check the input data variable."
+        else                            ! input data : z[m] & T[K]
+            z_in = vert_in
+            T_in = temp_in
+            Tv   = T_in*(1+(0.61*qv_in))
+            H    = (R*Tv)/g
+            P_in = Ps*exp(-(z_in/H))
+            Th_in = T_in*((Ps/P_in)**(R/cp))
+        endif
     endif
 
-!!!!! :: Interpolate to fit nz
+!!! :: Interpolate to fit nz
+
     do i = 1, nz
         do j = 1, nlev
             if ( z_in(j) <= z_full(i) .and. z_full(i) <= z_in(j+1) ) then
                 d1 = z_full(i) - z_in(j)
                 d2 = z_in(j+1) - z_full(i)
-                z_out(i)  =  z_in(j)*(d2/(d1+d2)) +  z_in(j+1)*(d1/(d1+d2))
-                w_out(i)  =  w_in(j)*(d2/(d1+d2)) +  w_in(j+1)*(d1/(d1+d2))
-                T_out(i)  =  T_in(j)*(d2/(d1+d2)) +  T_in(j+1)*(d1/(d1+d2))
+                 P_out(i) =  P_in(j)*(d2/(d1+d2)) +  P_in(j+1)*(d1/(d1+d2))
+                 w_out(i) =  w_in(j)*(d2/(d1+d2)) +  w_in(j+1)*(d1/(d1+d2))
                 qv_out(i) = qv_in(j)*(d2/(d1+d2)) + qv_in(j+1)*(d1/(d1+d2))
+                Th_out(i) = Th_in(j)*(d2/(d1+d2)) + Th_in(j+1)*(d1/(d1+d2))
             endif
         enddo
-        ! print*, 'i : ', i, 'z_out : ', z_out(i), 'T_out : ', T_out(i),  'Q_out : ', qv_out(i)
     enddo
-               
-
 
     end subroutine interpolate_1d
 end module vert_coordinate_mod
