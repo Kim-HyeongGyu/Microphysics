@@ -1,7 +1,7 @@
 module advection_mod
 use            global_mod !only: error_mesg
 contains
-    subroutine compute_advection(w_full, C, dt, nz, &
+    subroutine compute_advection(w_full, C, dt, nz, &   ! {{{
                                  dz, scheme, next_C)
 !-- Input
 ! w_full = vertical velocity at full coordinate(nz)
@@ -42,25 +42,29 @@ contains
     real, dimension(0:3,nz) :: zwt
     real, dimension(nz)    :: slp, C_left, C_right
     real, dimension(nz)   :: w_full, slope
-    real, dimension(nz+1) :: w_half, C_half, flux
+    real, dimension(nz+1) :: w_half, flux
     character(len=20)     :: eqn_form = "FLUX_FORM"
     logical :: linear, test_1
 
     ! vertical indexing
     ks     =    1; ke   = nz
-    kstart = ks+1; kend = ke
+    ! kstart = ks+1; kend = ke
+    kstart =   ks; kend = ke+1  ! do outflow boundary
 
     ! Make stagged grid for advection
     do k = ks+1, ke
         wgt = dz(k-1) / ( dz(k-1)+dz(k) )
         w_half(k) = w_full(k-1) + wgt*(w_full(k)-w_full(k-1))
     end do
-    w_half(1) = 0.; w_half(nz+1) = 0.     ! w = 0 at bottom/top
 
+    ! TODO: How to give boundary condition?
     ! Set Boundary Condition
     ! most likely w = 0 at these points
-    ! w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
-    flux(ks) = 0.; flux(ke+1) = 0.          ! Neumann BC
+     w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
+    ! w_half(1) = 2.; w_half(nz+1) = 2.
+    ! flux(ks) = 0.; flux(ke+1) = 0.        ! Neumann BC
+    flux(ks)   = w_half(ks)*C(ks)           ! do outflow boundary
+    flux(ke+1) = w_half(ke+1)*C(ke)
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{
@@ -87,25 +91,9 @@ contains
                 end if
 
                 flux(k) = w_half(k) * Cst
-                print*, cn
 
                 if (cn > 1.) call error_mesg("Courant number > 1")
-            end do
-            ! do n = 1, nt-1
-            !     do k = 2, nz
-            !         C_half(k) = ( dz(k-1)*C(k-1,n) + dz(k)*C(k,n) ) &
-            !                   / ( dz(k-1) + dz(k) )
-            !     end do
-            !
-            !     ! Boundary values
-            !     C_half(1)    = C( 1,n) - ( C_half( 2)-C( 1,n) )
-            !     C_half(nz+1) = C(nz,n) - ( C_half(nz)-C(nz,n) )
-            !
-            !     flux = w_half*C_half*dt
-            !     do k = 1, nz
-            !         C(k,n+1) = C(k,n) + ( flux(k)-flux(k+1) ) / dz(k)
-            !     end do
-            ! end do !}}}
+            end do !}}}
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
         case ("PPM")
@@ -116,7 +104,7 @@ contains
                                    - zwt(2,k)*slp(k)        &
                                    + zwt(3,k)*slp(k-1)      ! Equation 1.6 
                 C_right(k-1) = C_left(k)
-                ! Or, we can use Equation 1.9
+                ! Or, we can use Equation 1.9 (Need condition)
                 ! C_rihgt(k) = (7./12.)*(a(k)+a(k+1)) - (1./12.)*(a(k+2)+a(k-1))
                 ! coming out of this loop, all we need is r_left and r_right
             enddo
@@ -230,31 +218,32 @@ contains
                              please check input.nml")
     end select
     
-    ! vertical advective tendency
+    ! vertical advective tendency {{{
     select case (eqn_form)
         case ("FLUX_FORM")
             do k = ks, ke
-                dC_dt     = - (flux(k+1) - flux(k)) / dz(k)
+                ! Note: for conserve quantity, dz index is different.
+                !      Discuss with minwoo (2020.04.20)
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
                 next_C(k) = C(k) + dC_dt * dt
             end do
-            ! TODO: SEGMENTATION FAULT
         case ("ADVECTIVE_FORM")
             do k = ks, ke
-                dC_dt     = - ( flux(k+1) - flux(k) )          / dz(k) &
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) ) &
                             - ( C(k)*(w_half(k+1)-w_half(k)) ) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt
             end do
         case default
             call error_mesg("No setup equation form.")
-    end select
-    end subroutine compute_advection
+    end select  ! }}}
+
+    end subroutine compute_advection ! }}}
 
 
-    subroutine slope_z(C, dz, slope, limit, linear)
+    subroutine slope_z(C, dz, slope, limit, linear) ! {{{
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: slope
     logical,   optional,  intent(in) :: limit, linear
-
     real    :: grad(2:nz)
     real    :: Cmin, Cmax
     logical :: limiters = .true.
@@ -271,15 +260,15 @@ contains
         do k = 2, nz-1
             slope(k) = (grad(k+1)+grad(k))*dz(k)
         enddo
-     else
+    else
         do k = 2, nz-1
             slope(k) = ( grad(k+1)*(2.*dz(k-1)+dz(k)) + &
                          grad(k  )*(2.*dz(k+1)+dz(k)) ) * dz(k) &
                      / (   dz(k-1) + dz(k) + dz(k+1)  )
-         enddo
-     endif
-     slope(1 ) = 2.*grad(2 )*dz(1 )
-     slope(nz) = 2.*grad(nz)*dz(nz)
+        enddo
+    endif
+    slope(1 ) = 2.*grad(2 )*dz(1 )
+    slope(nz) = 2.*grad(nz)*dz(nz)
 
     ! apply limiters to slope
     if (limiters) then
@@ -297,58 +286,31 @@ contains
         enddo
     endif
 
-    end subroutine slope_z
+    end subroutine slope_z  ! }}}
 
 
- subroutine compute_weights ( dz, zwt )
- real, intent(in),  dimension(:)    :: dz
- real, intent(out), dimension(0:3,nz) :: zwt
- real    :: denom1, denom2, denom3, denom4, num3, num4, x, y
- integer :: k, nlevs
- logical :: redo
- real, allocatable :: zwts(:,:), dzs(:)
-
-! check the size of stored coefficients
-! need to reallocate if size has changed
-  nlevs = size(dz,1)
-  allocate (zwts(0:3,nlevs))
-  allocate (dzs (nlevs))
+    subroutine compute_weights(dz, zwt) ! {{{
+    real, intent(in),  dimension(:)      :: dz
+    real, intent(out), dimension(0:3,nz) :: zwt
+    real    :: denom1, denom2, denom3, denom4, num3, num4, x, y
+    integer :: k
    
-! coefficients/weights for computing values at grid box interfaces
-! only recompute coefficients for a column when layer depth has changed
-
-    redo = .false.
-    do k=1,size(dz,1)
-      if (dz(k) /= dzs(k)) then
-        redo = .true.
-        exit
-      endif
+    do k = 3, nz-1
+        denom1 = 1.0/(  dz(k-1) +   dz(k))
+        denom2 = 1.0/(  dz(k-2) +   dz(k-1) + dz(k) + dz(k+1))
+        denom3 = 1.0/(2*dz(k-1) +   dz(k))  
+        denom4 = 1.0/(  dz(k-1) + 2*dz(k))  
+        num3   = dz(k-2) + dz(k-1)          
+        num4   = dz(k)   + dz(k+1)        
+        x      = num3*denom3 - num4*denom4        
+        y      = 2.0*dz(k-1)*dz(k)  ! everything up to this point is just
+                                    ! needed to compute x1,x1,x3                      
+        zwt(0,k) = dz(k-1)*denom1               ! = 1/2 in equally spaced case
+        zwt(1,k) = zwt(0,k) + x*y*denom1*denom2 ! = 1/2 in equally spaced case
+        zwt(2,k) = dz(k-1)*num3*denom3*denom2   ! = 1/6 ''
+        zwt(3,k) = dz(k)*num4*denom4*denom2     ! = 1/6 ''
     enddo
 
-   if (redo) then
-     do k = 3, size(dz,1)-1
-       denom1 = 1.0/(dz(k-1) + dz(k))
-       denom2 = 1.0/(dz(k-2) + dz(k-1) + dz(k) + dz(k+1))
-       denom3 = 1.0/(2*dz(k-1) +   dz(k))  
-       denom4 = 1.0/(  dz(k-1) + 2*dz(k))  
-       num3   = dz(k-2) + dz(k-1)          
-       num4   = dz(k)   + dz(k+1)        
-       x      = num3*denom3 - num4*denom4        
-       y      = 2.0*dz(k-1)*dz(k) ! everything up to this point is just
-                                  ! needed to compute x1,x1,x3                      
-       zwt(0,k) = dz(k-1)*denom1                ! = 1/2 in equally spaced case
-       zwt(1,k) = zwt(0,k) + x*y*denom1*denom2  ! = 1/2 in equally spaced case
-       zwt(2,k) = dz(k-1)*num3*denom3*denom2    ! = 1/6 ''
-       zwt(3,k) = dz(k)*num4*denom4*denom2      ! = 1/6 ''
-     enddo
-     dzs(:) = dz(:)
-     zwts(0:3,:) = zwt(0:3,:)
-   else
-
-   ! use previously computed coefficients
-     zwt(0:3,:) = zwts(0:3,:)
-   endif
-
- end subroutine compute_weights
+    end subroutine compute_weights  ! }}}
 
 end module advection_mod

@@ -10,13 +10,13 @@
 /
 
 &dynamics_nml
-    num_levels        = 20,           ! [#]
-    top_of_atmosphere = 10000,        ! [m]
+    num_levels        = 40,           ! [#]
+    top_of_atmosphere = 2000,        ! [m]
     vertical_grid     = "stretching", ! "constant", "stretching"
     vertical_advect   = "PPM",        ! "finite_difference", "finite_volume", "PPM"
     CFL_condition     = 0.5           ! courant number 
                                       ! (Courant–Friedrichs–Lewy condition)
-    status_case = "real"              ! "ideal", "real"   T,q status
+    status_case = "ideal"              ! "ideal", "real"   T,q status
 /
 
 &physics_nml
@@ -30,5 +30,7 @@
     nbin    = 100,
     dist_type = "log_normal",         ! "gamma_dist"
     Nc = 1.e+8,      ! [# m-3]
-    qc = 2.
+    qc = 2.,
+    ventilation_effect = .true.,
+    mass_scheme = "FVM"               ! "interpolation", "FVM", "PPM"
 /

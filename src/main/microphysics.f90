@@ -81,38 +81,114 @@ contains
 
         radius             = r
         radius_boundary    = rb
-        ! TODO: add level index
         mass(:,1)          = m
         mass_boundary(:,1) = mb
 
     end subroutine make_bins
 
-    subroutine conc_growth(temp, qv, Pinit, dmdt)
+    subroutine conc_growth(temp, qv, Pinit, dm_dt, dmb_dt)
         implicit none
-        real, dimension(nz), intent(in)  :: temp, qv, Pinit
-        real, dimension(nz), intent(out) :: dmdt
+        real,                    intent(in)  :: temp, qv, Pinit
+        real, dimension(nbin),   intent(out) :: dm_dt
+        real, dimension(nbin+1), intent(out) :: dmb_dt
 
-        real :: Rv, Dv, Ka, L
-        real, dimension(nz) :: e, es, RH, S, Fd, Fk
+        real                    :: e, es, RH, S, Fk, Fd
+        real, dimension(nbin)   :: Vf
+        real, dimension(nbin+1) :: Vfb
 
+        call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
+        e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
+        RH    = (e/es)*100          ! Relative humidity    [%]
+        
         ! S     = RH - 1.
         S     = 0.01                ! For test
-        ! temp  = 293.15              ! For test             [K]
-        Rv    = 462                 ! vapor gas constant   [J kg-1 K-1]
-        L     = 2.5e6               ! heat of vaporization [W m-2]
-        ! Refer to Yau (1996), 103p - Table 7.1
-        Dv    = 2.21e-5             ! Diffusion            [m2 s-1]
-        Ka    = 2.40e-2             ! Thermal conductivity [J m-1 s-1 K-1]
 
-        ! Refer to 대기열역학
-        e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
-        es    = 6.112 * exp(( 17.67*temp )/( temp+243.5 )) ! saturated e
-        Rh    = (e/es)*100          ! Relative humidity    [%]
+        Vf = 1.; Vfb = 1.
+        if (ventilation_effect) then 
+            call ventilation(temp, radius, Vf)
+            call ventilation(temp, radius_boundary, Vfb)
+        end if
+        dm_dt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
+        dmb_dt = 4*PI*radius_boundary*(1./(Fd+Fk))*S*Vfb
 
-        Fd    = ( Rv*temp ) / (Dv*es)  
-        Fk    = ( L/(Rv*temp) - 1. ) * ( L/(Ka*temp) )
-        dmdt  = 4*PI*radius*(1./(Fd+Fk))*S
-        
     end subroutine conc_growth
+
+    subroutine cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd)
+        implicit none
+        real, intent(in)  :: temp, Pinit
+        real, intent(out) :: es, Fk, Fd
+        
+        real :: L, Rv, Ka, Dv
+        
+        L  = 2500297.8  ! heat of vaporization [J kg-1]
+        Rv = 467        ! vapor gas constant   [J kg-1 K-1]
+
+        ! Refer to Rogers & Yau (1996), 103p - Table 7.1 (T=273K)
+        Ka = 2.40e-2    ! coefficient of thermal conductivity of air    [J m-1 s-1 K-1]
+        Dv = 2.21e-5    ! molecular diffusion coefficient               [m2 s-1]
+
+        es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
+        ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
+
+        Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
+        Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
+        
+    end subroutine cal_es_Fk_Fd
+
+    subroutine ventilation(T, r, Vf)
+    ! Reference
+    ! https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
+        implicit none
+        real,               intent(in   ) :: T      ! Temperature [K]
+        real, dimension(:), intent(in   ) :: r      ! radius      [m]
+        real, dimension(:), intent(inout) :: Vf     ! ventilation effect
+        real, dimension(size(r)) :: Vt, Re
+        real :: rho_liquid, rho_air, gravity
+        real :: Cd, mu
+
+        rho_liquid = 1000.     ! [kg m-3] water density
+        rho_air    = 1.225     ! [kg m-3] air density
+        gravity    = 9.8
+
+        ! Assumed constant drag coefficient at large Re.
+        Cd = 0.45              ! Yau (1996) 125p
+
+        ! Note! We assumed that all drop shape is sphere.
+        Vt = sqrt( (8./3.)*(r*gravity*rho_liquid)  &
+                          /(rho_air*Cd) )   ! Yau (1996) equation 8.4
+
+        ! dynamic viscosity of air (See Yau (1996) 102-103p)
+        mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        ! mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+
+        ! Reynolds number
+        Re = 2*rho_air*r*Vt/mu         ! Yau (1996) 116p
+
+        if ( any(0 <= Re .and. Re < 2.5) ) then
+            Vf = 1.0 + 0.09*Re
+        else ! if (Re > 2.5) then
+            Vf = 0.78 + 0.28*sqrt(Re)
+        end if
+        
+    end subroutine ventilation
+
+    subroutine compute_mass()
+        ! 1) interpolation
+        ! 2) advection
+        select case (mass_scheme)
+            case ("interpolation")
+                stop
+            case ("FVM")
+                ! call mass_advection(dmb_dt, N, dt, nbin, &
+                !                   dm, "finite_volume", next_N)
+                stop
+            case ("PPM")
+                ! call mass_advection(dmb_dt, N, dt, nbin, &
+                !                   dm, "finite_volume", next_N)
+                stop
+            case default
+                
+        end select 
+    end subroutine compute_mass
 
 end module microphysics_mod
