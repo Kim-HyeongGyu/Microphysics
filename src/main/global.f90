@@ -31,6 +31,8 @@ implicit none
     real, dimension(:,:),   allocatable :: Th, T, q
     real, dimension(:),     allocatable :: Nr, dN_dlnr
     real, dimension(:,:),   allocatable :: dm_dt, dmb_dt
+    real, dimension(:,:,:), allocatable :: drop_num
+    
     character(len=20) :: vertical_grid, vertical_advect, mass_scheme
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
