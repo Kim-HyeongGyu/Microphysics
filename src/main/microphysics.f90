@@ -82,8 +82,10 @@ contains
 
         radius             = r
         radius_boundary    = rb
-        mass(:,1)          = m
-        mass_boundary(:,1) = mb
+        do k = 1, nz 
+            mass(:,k,1)          = m
+            mass_boundary(:,k,1) = mb
+        end do
 
     end subroutine make_bins
 
@@ -111,6 +113,9 @@ contains
         end if
         dm_dt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
         dmb_dt = 4*PI*radius_boundary*(1./(Fd+Fk))*S*Vfb
+        !do i = 1, nbin
+        !print*,dm_dt(i)
+        !end do
 
     end subroutine conc_growth
 
@@ -181,8 +186,7 @@ contains
     real, dimension(nbin) :: dm
         ! 1) reassign (redistribution)
         ! 2) advection
-        dm = mass_boundary(2:nbin+1,1) - mass_boundary(1:nbin,1)
-
+        dm = mass_boundary(2:nbin+1,1,1) - mass_boundary(1:nbin,1,1)
         select case (mass_scheme)
             case ("reassign")
                 call redistribution(Nr, next_Nr, mass, next_m)
@@ -318,7 +322,7 @@ contains
             ! endif
             
             ! compute fluxes at interfaces
-            tt = 2./3.
+           tt = 2./3.
             do k = kstart, kend ! ks+1, nz
                 if (w_half(k) >= 0.) then ! w = positive {{{
                     if (k == ks) cycle    ! inflow
@@ -415,7 +419,7 @@ contains
 
         y = 0
         do i = 1, nbin-1
-        !print*, "i=",i,"mass(i)=",mass(i),"next_m(i)",next_m(i),"mass(i+1)=",mass(i+1)
+        ! print*, "i=",i,"mass(i)=",mass(i),"next_m(i)",next_m(i),"mass(i+1)=",mass(i+1)
             if (mass(i) < next_m(i)) then
                 if(mass(i+1) > next_m(i)) then
                     x(i)=(Nr(i)*(next_m(i)-mass(i+1)))/(mass(i)-mass(i+1))
@@ -432,7 +436,8 @@ contains
             else
                 next_N(i)=Nr(i)
             end if
-        !    print*,"i=",i,"Nr(i)=",Nr(i),"Nr(i+1)=",Nr(i+1),"next_N(i)=",next_N(i)
+            ! print*,"i=",i,"Nr(i)=",Nr(i),"Nr(i+1)=",Nr(i+1),"next_N(i)=",next_N(i)
+        ! print*, mass(i),mass(i+1),next_N(i)
         end do
 
         next_N(nbin) = Nr(nbin)+y(nbin-1)

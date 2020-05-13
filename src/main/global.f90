@@ -26,8 +26,8 @@ implicit none
     real, dimension(:),     allocatable :: w, dz, Pinit, Thinit, qinit, winit
     real, dimension(:),     allocatable :: lev, temp_in, qv_in, w_in  
     real, dimension(:),     allocatable :: radius, radius_boundary
-    real, dimension(:,:), allocatable :: mass, mass_boundary 
-    ! real, dimension(:,:,:), allocatable :: mass, mass_boundary 
+    ! real, dimension(:,:), allocatable :: mass, mass_boundary 
+    real, dimension(:,:,:), allocatable :: mass, mass_boundary 
     real, dimension(:,:),   allocatable :: Th, T, q
     real, dimension(:),     allocatable :: Nr, dN_dlnr
     real, dimension(:,:),   allocatable :: dm_dt, dmb_dt

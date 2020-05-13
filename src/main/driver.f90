@@ -40,7 +40,7 @@ implicit none
     ! Th(:,1) = 273.
     w       = 1.
 
-    allocate(mass(nbin,nz), mass_boundary(nbin+1,nz))
+    allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
     call conc_dist()
 
@@ -61,21 +61,23 @@ implicit none
                                 vertical_advect,  q(:,n+1) )
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
         T  = 293.15 ! For test [K]
-
-        do k = 1, nz 
+        ! print*, "t=",n
+        do k = 1, nz
+        ! print*, "z=",k 
             call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
                              dm_dt(:,k), dmb_dt(:,k))
             ! TODO: test in one layer
-            mass(:,n+1) = mass(:,n) + dm_dt(:,1)*dt
-
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
+        !print*, dm_dt(:,1)
             ! TODO: Make code for mass
             call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
-                              mass(:,n),mass(:,n+1))
+                              mass(:,k,n),mass(:,k,n+1))
         end do
+
         ! TODO! print*, drop_num error
         !      1) size miss match
         !      2) result is different every triers.
-        print*, drop_num(:,10,n)
+        print*, drop_num(:,1,n)
         ! do i = 1, nbin
         !     print*, n,i, drop_num(i,10,n+1)
         ! end do
