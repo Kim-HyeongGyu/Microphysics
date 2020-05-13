@@ -60,11 +60,13 @@ implicit none
         call compute_advection( w, q(:,n), dt, nz, dz,     &
                                 vertical_advect,  q(:,n+1) )
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
-        ! TODO: Some Th values are zero. Maybe extratpolation problem.
         T  = 293.15 ! For test [K]
+
         do k = 1, nz 
             call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
                              dm_dt(:,k), dmb_dt(:,k))
+            ! TODO: test in one layer
+            mass(:,n+1) = mass(:,n) + dm_dt(:,1)*dt
 
             ! TODO: Make code for mass
             call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
@@ -73,7 +75,7 @@ implicit none
         ! TODO! print*, drop_num error
         !      1) size miss match
         !      2) result is different every triers.
-        ! print*, drop_num(:,10,n)
+        print*, drop_num(:,10,n)
         ! do i = 1, nbin
         !     print*, n,i, drop_num(i,10,n+1)
         ! end do
@@ -81,6 +83,7 @@ implicit none
         ! if (n == 400) stop
     end do
     ! print*, dmb_dt(:,10)
+    stop
 
     call write_data()
  

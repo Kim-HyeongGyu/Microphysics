@@ -176,8 +176,8 @@ contains
     subroutine compute_conc(dmb_dt, Nr, next_Nr, mass, next_m) !{{{
     implicit none
     real, dimension(nbin+1), intent(in)  :: dmb_dt
-    real, dimension(nbin),   intent(in)  :: Nr, mass
-    real, dimension(nbin),   intent(out) :: next_Nr, next_m
+    real, dimension(nbin),   intent(in)  :: Nr, mass, next_m
+    real, dimension(nbin),   intent(out) :: next_Nr
     real, dimension(nbin) :: dm
         ! 1) reassign (redistribution)
         ! 2) advection
@@ -185,8 +185,7 @@ contains
 
         select case (mass_scheme)
             case ("reassign")
-                next_Nr = Nr
-                call redistribution(next_Nr, mass, next_m)
+                call redistribution(Nr, next_Nr, mass, next_m)
             case ("finite_volume","PPM")
                 ! Conserve number
                 call conc_advection(dmb_dt, Nr, dt, nbin, &
@@ -409,7 +408,7 @@ contains
 
     end subroutine conc_advection ! }}}
 
-    subroutine redistribution(Nr, mass, next_m)
+    subroutine redistribution(Nr, next_N, mass, next_m)
         implicit none
         real, dimension(nbin) :: Nr, mass, next_m, next_N
         real, dimension(nbin) :: x, y
@@ -438,7 +437,7 @@ contains
 
         next_N(nbin) = Nr(nbin)+y(nbin-1)
         !print*,Nr(nbin),y(nbin-1),next_N(nbin)
-        Nr = next_N
+        ! Nr = next_N
         !print*, Nr
         !print*, sum(Nr)
 
