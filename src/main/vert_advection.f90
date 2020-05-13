@@ -244,6 +244,7 @@ contains
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: slope
     logical,   optional,  intent(in) :: limit, linear
+    integer :: k
     real    :: grad(2:nz)
     real    :: Cmin, Cmax
     logical :: limiters = .true.
