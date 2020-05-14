@@ -7,6 +7,7 @@ contains
         real,               intent(in) :: courant_number
         real, dimension(:), intent(in) :: w, dz
         integer,           intent(out) :: nt, dt
+
         dt = int(minval(courant_number*(dz/abs(w))))
         ! TODO: some compiler makes zero division err
         ! where (w /= 0.)

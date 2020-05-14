@@ -11,7 +11,7 @@ use   vert_coordinate_mod, only: compute_vert_coord , &
                                  interpolate_1d
 use         advection_mod, only: compute_advection
 use      microphysics_mod, only: make_bins, conc_dist, &
-                                conc_growth, redistribution
+                                 conc_growth, compute_conc
 implicit none
 
     call read_namelist()
@@ -30,49 +30,68 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz), dm_dt(nz))
+    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
     q(:,1)  = qinit
     w       = winit
-!    q      = 0
-!    q(5,1) = 100.
+    ! q      = 0
+    ! q(5,1) = 100.
+    ! Th(:,1) = 273.
     w       = 1.
- 
-    allocate(mass(nbin,nt))
+
+    allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
     call conc_dist()
 
     call show_setup_variables()    
 
-!    print*, Nr
-
-    
-    open(99,file='nr_log.txt',status='unknown')
-    write(99,'(<nbin>e20.3)') Nr
     ! Dynamic: time integration
-    do n = 1, nt-1
-!    do n = 1, 2
-        call compute_advection(w, Th(:,n), dt, nz, dz, &
-                               vertical_advect, Th(:,n+1))
-        call compute_advection(w, q(:,n), dt, nz, dz, &
-                               vertical_advect, q(:,n+1))
-        T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
-
-        T  = 293.15 ! For test [K]
-        call conc_growth(T(:,n+1), q(:,n+1), Pinit(:), dm_dt(:))
-        mass(:,n+1) = mass(:,n) + dm_dt(1)*dt
-        !print*, dm_dt(1), dt,mass(:,n+1)
-        !write(99,*), "t=",n 
-        call redistribution(Nr, mass(:,n),mass(:,n+1))
-    write(99,'(<nbin>e20.3)') Nr
-        !print*, Nr(:)
-        ! print*, dm_dt(1)
-        ! print*, mass(:2,n)
-        !print*, sum(Nr(:))
+    allocate(dm_dt(nbin,nz), dmb_dt(nbin+1,nz))
+    allocate(drop_num(nbin,nz,nt))
+    drop_num = 0
+    do k = 1, nz
+        drop_num(:,k,1) = Nr
     end do
-    
 
+
+    open(80, file="rb.txt",status="unknown")
+    write(80,*) radius_boundary
+    open(90,file="Nr.txt",status="unknown")
+    do n = 1, nt-1
+        call compute_advection( w, Th(:,n), dt, nz, dz,    &
+                                vertical_advect, Th(:,n+1) )
+        call compute_advection( w, q(:,n), dt, nz, dz,     &
+                                vertical_advect,  q(:,n+1) )
+        T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
+        T  = 293.15 ! For test [K]
+        ! print*, "t=",n
+        do k = 1, nz
+        ! print*, "z=",k 
+            call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
+                             dm_dt(:,k), dmb_dt(:,k))
+            ! TODO: test in one layer
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
+        !print*, dm_dt(:,1)
+            ! TODO: Make code for mass
+            call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
+                              mass(:,k,n),mass(:,k,n+1))
+        end do
+            do i = 1, nbin
+            write(90,*) drop_num(i,1,n)
+            end do
+        ! TODO! print*, drop_num error
+        !      1) size miss match
+        !      2) result is different every triers.
+        ! print*, drop_num(:,1,n)
+        ! do i = 1, nbin
+        !     print*, n,i, drop_num(i,10,n+1)
+        ! end do
+        ! print*, sum(Nr), sum(drop_num(:,10,n))
+        ! if (n == 400) stop
+    end do
+    ! print*, dmb_dt(:,10)
+    stop
 
     call write_data()
  
