@@ -49,6 +49,7 @@ contains
         print*, "Top of model       : ", ztop, " [m]"
         print*, "Grid type          : ", vertical_grid
         print*, "Integration method : ", vertical_advect
+        print*, "Mass Scheme        : ", mass_scheme
         print*, "==================================="
     end subroutine show_setup_variables
 
