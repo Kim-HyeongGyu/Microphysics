@@ -16,7 +16,7 @@ CONTAINS
   CHARACTER(LEN=300) :: FNAME
   CHARACTER(LEN=6) ::  l_name
 
-
+!============================================================= READ NC file
 
   ! Open the file. 
   CALL CHECK( NF90_OPEN(trim(FNAME), nf90_nowrite, ncid) )

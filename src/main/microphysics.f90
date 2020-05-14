@@ -70,7 +70,7 @@ contains
             print*, "::: droplet variable used: rmin & rratio :::"
         endif
 
-        allocate(radius(nbin), radius_boundary(nbin))
+        allocate(radius(nbin), radius_boundary(nbin+1))
         rb = (/ (rmin*(rratio**i), i=0,nbin) /)
         mb = (4./3.)*pi*rho*rb**3
 
@@ -79,6 +79,7 @@ contains
             m(i) = ( mb(i)+mb(i+1) ) / 2.
             r(i) = ( (3./4)/(PI*rho)*m(i) )**(1./3.)
         enddo
+    print*, r 
 
         radius             = r
         radius_boundary    = rb
