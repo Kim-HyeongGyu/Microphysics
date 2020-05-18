@@ -271,8 +271,8 @@ contains
         end do
 
         ! dynamic viscosity of air (See Yau (1996) 102-103p)
-        mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
-        ! mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
+        ! mu = 1.72e-5 * ( 393./(T+120.) ) * ( T/273. )**(3./2.)    ! approximate formula
+        mu = 1.717e-5          ! [kg m-1 s-1] (at 273 [K])
 
         ! Reynolds number
         Re = 2*rho_air*r*Vt/mu         ! Yau (1996) 116p
