@@ -2,7 +2,7 @@ module advection_mod
 use            global_mod !only: error_mesg
 contains
     subroutine compute_advection(w_full, C, dt, nz, &   ! {{{
-                                 dz, scheme, next_C)
+                                 dz, scheme, var, next_C)
 !-- Input
 ! w_full = vertical velocity at full coordinate(nz)
 ! C      = n-1 time step
@@ -44,6 +44,7 @@ contains
     real, dimension(nz)   :: w_full, slope
     real, dimension(nz+1) :: w_half, flux
     character(len=20)     :: eqn_form = "FLUX_FORM"
+    character(len=*)     :: var
     logical :: linear, test_1
 
     ! vertical indexing
@@ -57,14 +58,14 @@ contains
         w_half(k) = w_full(k-1) + wgt*(w_full(k)-w_full(k-1))
     end do
 
-    ! TODO: How to give boundary condition?
-    ! Set Boundary Condition
+    ! Set Boundary Condition (Homogeneous Dirichlet BC)
     ! most likely w = 0 at these points
-     w_half(1) = 0.; w_half(nz+1) = 0.     ! Homogeneous Dirichlet BC
-    ! w_half(1) = 2.; w_half(nz+1) = 2.
-    ! flux(ks) = 0.; flux(ke+1) = 0.        ! Neumann BC
-    flux(ks)   = w_half(ks)*C(ks)           ! do outflow boundary
-    flux(ke+1) = w_half(ke+1)*C(ke)
+    if ( (trim(var) == "qvapor") .or. (trim(var) == "Nc")) then
+        w_half(1) = 0.; w_half(nz+1) = 0.
+    end if
+    ! do outflow boundary
+    flux(ks)   = w_half(ks)*C(ks)   / dz(ks)
+    flux(ke+1) = w_half(ke+1)*C(ke) / dz(ke)
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{
@@ -84,10 +85,12 @@ contains
                     if (k == ks) cycle          ! inflow
                     cn  = dt*w_half(k)/dz(k-1)  ! courant number
                     Cst = C(k-1) + 0.5*slope(k-1)*(1.-cn)
+                    Cst = Cst / dz(k-1)
                 else
                     if (k == ke+1) cycle        ! inflow
                     cn  = -dt*w_half(k)/dz(k)
                     Cst = C(k) - 0.5*slope(k)*(1.-cn)
+                    Cst = Cst / dz(k)
                 end if
 
                 flux(k) = w_half(k) * Cst
@@ -97,6 +100,7 @@ contains
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
         case ("PPM")
+            zwt = 0 ! Note! Avoid for Nan value occur
             call compute_weights(dz, zwt)
             call slope_z(C, dz, slp, linear=.false.)        ! Equation 1.7
             do k = ks+2, ke-1
@@ -206,6 +210,7 @@ contains
                     ! extension for Courant numbers > 1
                     if (cn > 1.) Cst = (xx*Cst + Csum)/cn
                 endif   ! }}}
+                Cst = Cst / dz(kk)  ! for conservation
                 flux(k) = w_half(k)*Cst
                 ! if (xx > 1.) cflerr = cflerr+1
                 ! cflmaxx = max(cflmaxx,xx)
@@ -224,12 +229,15 @@ contains
             do k = ks, ke
                 ! Note: for conserve quantity, dz index is different.
                 !      Discuss with minwoo (2020.04.20)
-                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
+                ! dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
+                dC_dt     = - ( flux(k+1) - flux(k) )
                 next_C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")
             do k = ks, ke
-                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) ) &
+                ! dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) ) &
+                !             - ( C(k)*(w_half(k+1)-w_half(k)) ) / dz(k)
+                dC_dt     = - ( flux(k+1) - flux(k) ) &
                             - ( C(k)*(w_half(k+1)-w_half(k)) ) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt
             end do
@@ -244,6 +252,7 @@ contains
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: slope
     logical,   optional,  intent(in) :: limit, linear
+    integer :: k
     real    :: grad(2:nz)
     real    :: Cmin, Cmax
     logical :: limiters = .true.

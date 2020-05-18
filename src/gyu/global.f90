@@ -30,8 +30,10 @@ implicit none
     real, dimension(:,:,:), allocatable :: mass, mass_boundary 
     real, dimension(:,:),   allocatable :: Th, T, q
     real, dimension(:),     allocatable :: Nr, dN_dlnr
-    real, dimension(:,:),   allocatable :: dm_dt
-    character(len=20) :: vertical_grid, vertical_advect
+    real, dimension(:,:),   allocatable :: dm_dt, dmb_dt
+    real, dimension(:,:,:), allocatable :: drop_num
+    
+    character(len=20) :: vertical_grid, vertical_advect, mass_scheme
     character(len=10) :: vert_var, temp_var
     character(len=20) :: dist_type
     character(len=10) :: status_case
@@ -47,6 +49,7 @@ contains
         print*, "Top of model       : ", ztop, " [m]"
         print*, "Grid type          : ", vertical_grid
         print*, "Integration method : ", vertical_advect
+        print*, "Mass Scheme        : ", mass_scheme
         print*, "==================================="
     end subroutine show_setup_variables
 
