@@ -6,7 +6,8 @@ contains
                                  dz, scheme, next_C)
 
     implicit none
-    integer,              intent(in) :: dt, nz
+    integer,              intent(in) :: nz
+    real,                 intent(in) :: dt
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C
@@ -50,15 +51,18 @@ contains
                     if (k == ks) cycle          ! inflow
                     cn  = dt*w_half(k)/dz(k-1)  ! courant number
                     Cst = C(k-1) + 0.5*slope(k-1)*(1.-cn)
-                    Cst = Cst / dz(k-1)
+                    Cst = Cst / dz(k-1)         ! for conservation
+! print*, cn, dt, w_half(k), dz(k-1)
                 else
                     if (k == ke+1) cycle        ! inflow
                     cn  = -dt*w_half(k)/dz(k)
                     Cst = C(k) - 0.5*slope(k)*(1.-cn)
-                    Cst = Cst / dz(k)
+                    Cst = Cst / dz(k)           ! for conservation
+! print*, cn, dt, w_half(k), dz(k-1)
                 end if
 
                 flux(k) = w_half(k) * Cst
+! print*, flux(k)
 
                 if (cn > 1.) call error_mesg("Courant number > 1")
             end do !}}}

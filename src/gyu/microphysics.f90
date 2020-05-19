@@ -133,11 +133,14 @@ contains
         Ka = 2.40e-2    ! coefficient of thermal conductivity of air    [J m-1 s-1 K-1]
         Dv = 2.21e-5    ! molecular diffusion coefficient               [m2 s-1]
 
+        ! Refer to Rogers & Yau (1996), 16p - (2.17)
         es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
         ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
 
-        Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
-        Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
+        ! Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
+        ! Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
+        Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )
+        Fd = ( Rv*temp ) / ( Dv*(es*100.) )
         
     end subroutine cal_es_Fk_Fd!}}}
 

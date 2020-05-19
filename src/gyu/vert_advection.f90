@@ -28,7 +28,8 @@ contains
 !       https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
 
     implicit none
-    integer,              intent(in) :: dt, nz
+    integer,              intent(in) :: nz
+    real,                 intent(in) :: dt
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C

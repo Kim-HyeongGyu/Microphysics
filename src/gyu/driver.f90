@@ -30,7 +30,7 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    ! dt = 10; nt = 2000
+    dt = 0.01; nt = 10000
     allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
@@ -52,6 +52,7 @@ implicit none
     end do
 
     do n = 1, nt-1
+print*, drop_num(:,1,n)
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
                                 vertical_advect, "THETA", Th(:,n+1) )
         call compute_advection( w, q(:,n), dt, nz, dz,     &
@@ -70,8 +71,8 @@ implicit none
         end do
 ! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
 ! print*, mass(:,1,n+1)
+! print*, dmb_dt(:,1)
 
-print*, drop_num(:,1,n)
         ! if (n == 41) stop
     end do
     stop
