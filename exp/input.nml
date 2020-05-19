@@ -1,7 +1,7 @@
 ! Namelist for 1D box model
 
 &main_nml
-    t_final = 20000                  ! End of time [s]
+    t_final = 100000                ! End of time [s]
 /
 
 &data_nml
@@ -11,7 +11,7 @@
 
 &dynamics_nml
     num_levels        = 40,           ! [#]
-    top_of_atmosphere = 2000,        ! [m]
+    top_of_atmosphere = 2000,         ! [m]
     vertical_grid     = "stretching", ! "constant", "stretching"
     vertical_advect   = "PPM",        ! "finite_difference", "finite_volume", "PPM"
     CFL_condition     = 0.5           ! courant number 
@@ -28,9 +28,9 @@
     rmax    = 1.e-2, ! [m]
     rratio  = 1.258925,
     nbin    = 100,
-    dist_type = "log_normal",         ! "gamma_dist"
+    dist_type = "log_normal",         ! "log_normal", "gamma_dist"
     Nc = 1.e+8,      ! [# m-3]
     qc = 2.e-3,      ! [kg/kg]
     ventilation_effect = .false.,
-    mass_scheme = "finite_volume"     ! "interpolation", "finite_volume", "PPM"
+    mass_scheme = "PPM"     ! "reassign", "finite_volume", "PPM"
 /
