@@ -5,7 +5,7 @@ implicit none
     integer :: num_levels, nz         ! Num of levels
     integer :: nlev
     integer :: nt                     ! time step  [s]
-    integer :: dt                     ! delta time [s]
+    real    :: dt                     ! delta time [s]
     integer :: t_final                ! Last time  [s]
     integer :: drop_var
     integer :: nbin

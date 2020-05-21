@@ -31,6 +31,7 @@ implicit none
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
     allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
+    dt = 0.01; nt = 1000
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
     q(:,1)  = qinit
@@ -38,8 +39,8 @@ implicit none
     ! q      = 0
     ! q(5,1) = 100.
     ! Th(:,1) = 273.
-    w       = 1.
-
+    ! w       = 1.
+    !print*, q(:,1)
     allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
     call conc_dist()
@@ -53,44 +54,38 @@ implicit none
     do k = 1, nz
         drop_num(:,k,1) = Nr
     end do
-
+  
 
     open(80, file="rb.txt",status="unknown")
     write(80,*) radius_boundary
     open(90,file="Nr.txt",status="unknown")
     do n = 1, nt-1
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
-                                vertical_advect, Th(:,n+1) )
+                                vertical_advect,"THETA", Th(:,n+1) )
         call compute_advection( w, q(:,n), dt, nz, dz,     &
-                                vertical_advect,  q(:,n+1) )
+                                vertical_advect, "qvapor", q(:,n+1) )
+        ! call compute_advection( w, drop_num(:,n), dt, nz, dz,     &
+        !                         vertical_advect, "Nc", q(:,n+1) )
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
-        T  = 293.15 ! For test [K]
+        
         ! print*, "t=",n
         do k = 1, nz
-        ! print*, "z=",k 
+        ! print*, "z=",k
             call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
                              dm_dt(:,k), dmb_dt(:,k))
             ! TODO: test in one layer
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
         !print*, dm_dt(:,1)
-            ! TODO: Make code for mass
             call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                               mass(:,k,n),mass(:,k,n+1))
         end do
             do i = 1, nbin
             write(90,*) drop_num(i,1,n)
             end do
-        ! TODO! print*, drop_num error
-        !      1) size miss match
-        !      2) result is different every triers.
-        ! print*, drop_num(:,1,n)
-        ! do i = 1, nbin
-        !     print*, n,i, drop_num(i,10,n+1)
-        ! end do
-        ! print*, sum(Nr), sum(drop_num(:,10,n))
-        ! if (n == 400) stop
     end do
     ! print*, dmb_dt(:,10)
+
+
     stop
 
     call write_data()
