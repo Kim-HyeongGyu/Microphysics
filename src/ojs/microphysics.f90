@@ -101,7 +101,7 @@ contains
 
         call cal_es_Fk_Fd(temp,Pinit,es,Fk,Fd) 
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
-        RH    = (e/es)*100          ! Relative humidity    [%]
+        RH    = (e/es)              ! Relative humidity    [%]
         
         ! S     = RH - 1.
         S     = 0.01                ! For test
@@ -335,6 +335,7 @@ contains
                     next_N(i)=x(i)+y(i)
                     exit
                 end if
+
             end if
             end do
         !     print*,"i=",i,"Nr(i)=",Nr(i),"x=",x(i),"y=",y(i),"next_N(i)=",next_N(i)
