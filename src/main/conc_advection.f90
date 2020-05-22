@@ -1,31 +1,9 @@
-module advection_mod
-use            global_mod !only: error_mesg
+module conc_advect_mod
+use            global_mod, only: error_mesg
 contains
-    subroutine compute_advection(w_full, C, dt, nz, &   ! {{{
-                                 dz, scheme, var, next_C)
-!-- Input
-! w_full = vertical velocity at full coordinate(nz)
-! C      = n-1 time step
-! nt     = size of time for iteration
-! dt     = length of time step
-! nz     = Number of vertical grid
-! dz     = depth of model layers
-! scheme = differencing scheme, use one of these values:
-!           finite_difference = second-order centered finite difference
-!           finite_volume     = finite volume method
-!           PPM               = piecewise parabolic method
-!                               See Colella and Woodward (1984)
-!
-!-- Output
-! next_C = advected quantity
-!
-! Note! Here, flux form is used for advection term
-! FLUX_FORM      = solves for -d(wr)/dt
-! ADVECTIVE_FORM = solves for -w*d(r)/dt
-!
-!       Here, we use Lorenz configuration
-!       See Figure 1 in Holdaway et al., (2012) 
-!       https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
+    
+    subroutine conc_advection(w_half, C, dt, nz, &   ! {{{
+                                 dz, scheme, next_C)
 
     implicit none
     integer,              intent(in) :: nz
@@ -33,7 +11,7 @@ contains
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C
-    integer :: kk
+    integer :: k, kk
     integer :: ks, ke, kstart, kend
     real    :: wgt   ! weight dz
     real    :: Cwgt  ! weight variable
@@ -42,10 +20,9 @@ contains
     real    :: xx, a, b, Cm, C6, Cst, Cdt
     real, dimension(0:3,nz) :: zwt
     real, dimension(nz)    :: slp, C_left, C_right
-    real, dimension(nz)   :: w_full, slope
+    real, dimension(nz)   :: slope
     real, dimension(nz+1) :: w_half, flux
     character(len=20)     :: eqn_form = "FLUX_FORM"
-    character(len=*)     :: var
     logical :: linear, test_1
 
     ! vertical indexing
@@ -53,18 +30,6 @@ contains
     ! kstart = ks+1; kend = ke
     kstart =   ks; kend = ke+1  ! do outflow boundary
 
-    ! Make stagged grid for advection
-    do k = ks+1, ke
-        wgt = dz(k-1) / ( dz(k-1)+dz(k) )
-        w_half(k) = w_full(k-1) + wgt*(w_full(k)-w_full(k-1))
-    end do
-
-    ! Set Boundary Condition (Homogeneous Dirichlet BC)
-    ! most likely w = 0 at these points
-    if ( (trim(var) == "qvapor") .or. (trim(var) == "Nc")) then
-        w_half(1) = 0.; w_half(nz+1) = 0.
-    end if
-    ! do outflow boundary
     flux(ks)   = w_half(ks)*C(ks)   / dz(ks)
     flux(ke+1) = w_half(ke+1)*C(ke) / dz(ke)
 
@@ -80,30 +45,32 @@ contains
         ! 2) Finite Volume method (FVM) {{{
         case ("finite_volume") 
             ! slope along the z-axis
-            call slope_z(C, dz, slope)
+            call slope_z(C, nz, dz, slope)
             do k = kstart, kend
                 if (w_half(k) >= 0.) then
                     if (k == ks) cycle          ! inflow
                     cn  = dt*w_half(k)/dz(k-1)  ! courant number
                     Cst = C(k-1) + 0.5*slope(k-1)*(1.-cn)
-                    Cst = Cst / dz(k-1)
+                    Cst = Cst / dz(k-1)         ! for conservation
+! print*, cn, dt, w_half(k), dz(k-1)
                 else
                     if (k == ke+1) cycle        ! inflow
                     cn  = -dt*w_half(k)/dz(k)
                     Cst = C(k) - 0.5*slope(k)*(1.-cn)
-                    Cst = Cst / dz(k)
+                    Cst = Cst / dz(k)           ! for conservation
+! print*, cn, dt, w_half(k), dz(k-1)
                 end if
 
                 flux(k) = w_half(k) * Cst
+! print*, flux(k)
 
                 if (cn > 1.) call error_mesg("Courant number > 1")
             end do !}}}
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
         case ("PPM")
-            zwt = 0 ! Note! Avoid for Nan value occur
-            call compute_weights(dz, zwt)
-            call slope_z(C, dz, slp, linear=.false.)        ! Equation 1.7
+            call compute_weights(nz, dz, zwt)
+            call slope_z(C, nz, dz, slp, linear=.false.)    ! Equation 1.7
             do k = ks+2, ke-1
                 C_left(k) = C(k-1) + zwt(1,k)*(C(k)-C(k-1)) &
                                    - zwt(2,k)*slp(k)        &
@@ -230,7 +197,6 @@ contains
             do k = ks, ke
                 ! Note: for conserve quantity, dz index is different.
                 !      Discuss with minwoo (2020.04.20)
-                ! dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
                 dC_dt     = - ( flux(k+1) - flux(k) )
                 next_C(k) = C(k) + dC_dt * dt
             end do
@@ -246,10 +212,9 @@ contains
             call error_mesg("No setup equation form.")
     end select  ! }}}
 
-    end subroutine compute_advection ! }}}
+    end subroutine conc_advection ! }}}
 
-
-    subroutine slope_z(C, dz, slope, limit, linear) ! {{{
+    subroutine slope_z(C, nz, dz, slope, limit, linear) ! {{{
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: slope
     logical,   optional,  intent(in) :: limit, linear
@@ -298,8 +263,7 @@ contains
 
     end subroutine slope_z  ! }}}
 
-
-    subroutine compute_weights(dz, zwt) ! {{{
+    subroutine compute_weights(nz, dz, zwt) ! {{{
     real, intent(in),  dimension(:)      :: dz
     real, intent(out), dimension(0:3,nz) :: zwt
     real    :: denom1, denom2, denom3, denom4, num3, num4, x, y
@@ -323,4 +287,4 @@ contains
 
     end subroutine compute_weights  ! }}}
 
-end module advection_mod
+end module conc_advect_mod
