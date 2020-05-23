@@ -75,6 +75,13 @@ implicit none
                              dm_dt(:,k), dmb_dt(:,k))
             ! TODO: test in one layer
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
+            ! TODO: dqv, dT 
+        
+        !    dqv(k) = -sum(dm_dt(:,1)*dt)
+        !    q(k,n+1)=q(:,n+1)+dqv(k)
+        !    dT(k) = -(L*dqv(k))/(rho*Cp)    ! define use L, Cp??
+        !    T(k,n+1)=T(:,n+1)+dT(k)
+
         !print*, dm_dt(:,1)
             call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                               mass(:,k,n),mass(:,k,n+1))

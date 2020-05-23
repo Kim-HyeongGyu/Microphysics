@@ -139,7 +139,7 @@ contains
 
         ! Fk = ((L/(Rv*temp))-1.)*((L*rho)/(Ka*temp))
         ! Fd = (rho*Rv*temp) / ((Dv*(1000./Pinit))*(es*100.))
-        Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )
+        Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )    !! TODO Dv*(1000./Pinit)?? 
         Fd = ( Rv*temp ) / ( Dv*(es*100.) )
         
     end subroutine cal_es_Fk_Fd!}}}
