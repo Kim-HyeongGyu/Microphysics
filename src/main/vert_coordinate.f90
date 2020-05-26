@@ -79,8 +79,6 @@ contains
     integer :: i, j, k
     real    :: d1, d2
 
-    print*, nz, nlev
-    print*, size(z_full)
     allocate(P_out(nz), Th_out(nz), qv_out(nz), w_out(nz))
 
 !!! :: (VARIABLES) to (z, P, T, theta, qv, RH)

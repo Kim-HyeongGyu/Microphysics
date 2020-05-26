@@ -59,8 +59,9 @@ implicit none
         ! call compute_advection( w, q(:,n), dt, nz, dz,     &
         !                         vertical_advect, "qvapor", q(:,n+1) )
         do i = 1, nbin
-            call compute_advection( w, drop_num(i,:,n), dt, nz, dz,     &
-                                    vertical_advect, "Nc", drop_num(i,:,n+1) )
+            call compute_advection( w, drop_num(i,:,n), dt, nz, dz,             &
+                                    vertical_advect, "Nc", drop_num(i,:,n+1),   &
+                                    drop_num(i,1,1) )
         end do
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
 
