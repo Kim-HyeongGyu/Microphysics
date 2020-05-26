@@ -140,7 +140,7 @@ contains
         Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )
         Fd = ( Rv*temp ) / ( (Dv*(1000./Pinit)) * (es*100.) )
         ! Refer to Rogers & Yau (1996), 103p - Table 7.1 caption,
-        ! "Dv must therefore be multiplirf by (1000./P)"
+        ! "Dv must therefore be multiplied by (1000./P)"
         
     end subroutine cal_es_Fk_Fd!}}}
 
