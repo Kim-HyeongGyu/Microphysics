@@ -21,6 +21,7 @@ implicit none
     real, parameter :: Cp  = 1005.      ! [J kg-1 K-1] specific heat at constant pressure
     real, parameter :: g   = 9.8        ! [m s-2] gravity 
     real, parameter :: rho = 1005.      ! [kg m-3] water density
+    real, parameter :: L  = 2500297.8  ! heat of vaporization [J kg-1]
 
     real, dimension(:),     allocatable :: z_full, z_half
     real, dimension(:),     allocatable :: w, dz, Pinit, Thinit, qinit, winit
@@ -32,6 +33,7 @@ implicit none
     real, dimension(:),     allocatable :: Nr, dN_dlnr
     real, dimension(:,:),   allocatable :: dm_dt, dmb_dt
     real, dimension(:,:,:), allocatable :: drop_num
+    real, dimension(:),     allocatable :: dTemp, dqv
     
     character(len=20) :: vertical_grid, vertical_advect, mass_scheme
     character(len=10) :: vert_var, temp_var

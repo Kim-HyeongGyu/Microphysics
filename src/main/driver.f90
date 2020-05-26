@@ -52,6 +52,7 @@ implicit none
         drop_num(:,k,1) = Nr
     end do
 
+    allocate(dTemp(nz), dqv(nz))
     do n = 1, nt-1
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
                                 vertical_advect, "THETA", Th(:,n+1), Th(1,1) )
@@ -71,6 +72,12 @@ implicit none
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
             call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                                mass(:,k,n), mass(:,k,n+1) )
+        !   Online Coupling with T and qv
+            dqv(k) = -sum(dm_dt(:,k)*dt)
+            q(k,n+1)=q(k,n+1)+dqv(k)
+            dTemp(k) = -(L*dqv(k))/(rho*Cp)
+            T(k,n+1)=T(k,n+1)+dTemp(k)
+            Th(k,n+1)=Th(k,n+1)+dTemp(k)
         end do
 ! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
 ! print*, mass(:,1,n+1)
