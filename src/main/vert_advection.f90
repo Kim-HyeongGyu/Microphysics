@@ -2,7 +2,7 @@ module advection_mod
 use            global_mod !only: error_mesg
 contains
     subroutine compute_advection(w_full, C, dt, nz, &   ! {{{
-                                 dz, scheme, var, next_C)
+                                 dz, scheme, var, next_C, Csfc)
 !-- Input
 ! w_full = vertical velocity at full coordinate(nz)
 ! C      = n-1 time step
@@ -33,6 +33,8 @@ contains
     character(len=*),     intent(in) :: scheme
     real, dimension(nz),  intent(in) :: C, dz
     real, dimension(nz), intent(out) :: next_C
+    real,      optional,  intent(in) :: Csfc
+
     integer :: kk
     integer :: ks, ke, kstart, kend
     real    :: wgt   ! weight dz
@@ -67,6 +69,7 @@ contains
     ! do outflow boundary
     flux(ks)   = w_half(ks)*C(ks)   / dz(ks)
     flux(ke+1) = w_half(ke+1)*C(ke) / dz(ke)
+    if ( present(Csfc) ) flux(ks) = w_half(ks)*Csfc / dz(ks)
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{

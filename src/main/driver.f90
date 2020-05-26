@@ -35,7 +35,8 @@ implicit none
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
     q (:,1) = qinit
-    w       = winit
+    ! w       = winit
+    w       = 0.5
 
     allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
@@ -52,20 +53,21 @@ implicit none
     end do
 
     do n = 1, nt-1
-print*, drop_num(:,1,n)
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
-                                vertical_advect, "THETA", Th(:,n+1) )
-        call compute_advection( w, q(:,n), dt, nz, dz,     &
-                                vertical_advect, "qvapor", q(:,n+1) )
-        ! call compute_advection( w, drop_num(:,n), dt, nz, dz,     &
-        !                         vertical_advect, "Nc", q(:,n+1) )
+                                vertical_advect, "THETA", Th(:,n+1), Th(1,1) )
+        ! Note! qv calculated from advected Nr
+        ! call compute_advection( w, q(:,n), dt, nz, dz,     &
+        !                         vertical_advect, "qvapor", q(:,n+1) )
+        do i = 1, nbin
+            call compute_advection( w, drop_num(i,:,n), dt, nz, dz,     &
+                                    vertical_advect, "Nc", drop_num(i,:,n+1) )
+        end do
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
 
         do k = 1, nz
             call conc_growth( T(k,n+1), q(k,n+1), Pinit(k), &
                               dm_dt(:,k), dmb_dt(:,k) )
-            ! TODO: test in one layer
-            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
             call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                                mass(:,k,n), mass(:,k,n+1) )
         end do
@@ -74,6 +76,7 @@ print*, drop_num(:,1,n)
 ! print*, dmb_dt(:,1)
 
         ! if (n == 41) stop
+        ! TODO: Need about latent heat code
     end do
     stop
 
