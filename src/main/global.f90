@@ -18,9 +18,9 @@ implicit none
 
     real, parameter :: PI  = 3.141592
     real, parameter :: R   = 287.       ! [J kg-1 K-1]
-    real, parameter :: Cp  = 1003.5     ! [J kg-1 K-1] specific heat at constant pressure
+    real, parameter :: Cp  = 1005.      ! [J kg-1 K-1] specific heat at constant pressure
     real, parameter :: g   = 9.8        ! [m s-2] gravity 
-    real, parameter :: rho = 1000.      ! [kg m-3] water density
+    real, parameter :: rho = 1005.      ! [kg m-3] water density
 
     real, dimension(:),     allocatable :: z_full, z_half
     real, dimension(:),     allocatable :: w, dz, Pinit, Thinit, qinit, winit
