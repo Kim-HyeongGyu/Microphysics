@@ -1,7 +1,7 @@
 program driver
 use            global_mod
-use            read_nc_mod
-use           write_nc_mod
+use           read_nc_mod
+use          write_nc_mod
 use           file_io_mod, only: read_namelist, &
                                 read_data_init, &
                                     write_data
@@ -17,6 +17,8 @@ implicit none
     call read_namelist()
 
     call read_data_init(nlev, lev, temp_in, qv_in, w_in)
+
+
     ! Calculate dz
     call compute_vert_coord(ztop, zbottom, nz, vertical_grid, &
                             z_full, z_half, dz)
@@ -28,17 +30,14 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     dt = 0.01; nt = 10000
+    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
-    q(:,1)  = qinit
-    w       = winit
-    ! q      = 0
-    ! q(5,1) = 100.
-    ! Th(:,1) = 273.
-    ! w       = 1.
-    !print*, q(:,1)
+    q (:,1) = qinit
+    ! w       = winit
+    w       = 0.5
+
     allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
     call conc_dist()
@@ -52,48 +51,41 @@ implicit none
     do k = 1, nz
         drop_num(:,k,1) = Nr
     end do
-  
 
-!    open(80, file="rb.txt",status="unknown")
-!    write(80,*) radius_boundary
-!    open(90,file="Nr.txt",status="unknown")
+    allocate(dTemp(nz), dqv(nz))
     do n = 1, nt-1
-        !print*, drop_num(:,1,n)
-        !print*, mass(:,1,n)
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
-                                vertical_advect,"THETA", Th(:,n+1) )
-        call compute_advection( w, q(:,n), dt, nz, dz,     &
-                                vertical_advect, "qvapor", q(:,n+1) )
-        ! call compute_advection( w, drop_num(:,n), dt, nz, dz,     &
-        !                         vertical_advect, "Nc", q(:,n+1) )
-        T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
-        
-        ! print*, "t=",n
-        do k = 1, nz
-        ! print*, "z=",k
-            call conc_growth(T(k,n+1), q(k,n+1), Pinit(k), &
-                             dm_dt(:,k), dmb_dt(:,k))
-            ! TODO: test in one layer
-            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
-        !    if (mass(:,k,n+1)<=0.) mass(:,k,n+1)=0.
-            ! TODO: dqv, dT 
-        !   Online Coupling with T and qv
-        !    dqv(k) = -sum(dm_dt(:,1)*dt)    ! dm_dt(:,1)-> k=1 fixed??
-        !    q(k,n+1)=q(:,n+1)+dqv(k)
-        !    dT(k) = -(L*dqv(k))/(rho*Cp)    ! define use L, Cp??
-        !    T(k,n+1)=T(:,n+1)+dT(k)
-
-        !print*, dm_dt(:,1)
-            call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
-                              mass(:,k,n),mass(:,k,n+1))
+                                vertical_advect, "THETA", Th(:,n+1), Th(1,1) )
+        ! Note! qv calculated from advected Nr
+        ! call compute_advection( w, q(:,n), dt, nz, dz,     &
+        !                         vertical_advect, "qvapor", q(:,n+1) )
+        do i = 1, nbin
+            call compute_advection( w, drop_num(i,:,n), dt, nz, dz,             &
+                                    vertical_advect, "Nc", drop_num(i,:,n+1),   &
+                                    drop_num(i,1,1) )
         end do
-!            do i = 1, nbin
-!            write(90,*) drop_num(i,1,n)
-!            end do
+        T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
+
+        do k = 1, nz
+            call conc_growth( T(k,n+1), q(k,n+1), Pinit(k), &
+                              dm_dt(:,k), dmb_dt(:,k) )
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
+            call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
+                               mass(:,k,n), mass(:,k,n+1) )
+        !   Online Coupling with T and qv
+            dqv(k) = -sum(dm_dt(:,k)*dt)
+            q(k,n+1)=q(k,n+1)+dqv(k)
+            dTemp(k) = -(L*dqv(k))/(rho*Cp)
+            T(k,n+1)=T(k,n+1)+dTemp(k)
+            Th(k,n+1)=Th(k,n+1)+dTemp(k)
+        end do
+! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
+! print*, mass(:,1,n+1)
+! print*, dmb_dt(:,1)
+
+        ! if (n == 41) stop
+        ! TODO: Need about latent heat code
     end do
-    ! print*, dmb_dt(:,10)
-
-
     stop
 
     call write_data()
