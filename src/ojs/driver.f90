@@ -56,10 +56,12 @@ implicit none
     end do
   
 
-    open(80, file="rb.txt",status="unknown")
-    write(80,*) radius_boundary
-    open(90,file="Nr.txt",status="unknown")
+!    open(80, file="rb.txt",status="unknown")
+!    write(80,*) radius_boundary
+!    open(90,file="Nr.txt",status="unknown")
     do n = 1, nt-1
+        !print*, drop_num(:,1,n)
+        !print*, mass(:,1,n)
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
                                 vertical_advect,"THETA", Th(:,n+1) )
         call compute_advection( w, q(:,n), dt, nz, dz,     &
@@ -75,9 +77,10 @@ implicit none
                              dm_dt(:,k), dmb_dt(:,k))
             ! TODO: test in one layer
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,1)*dt
+        !    if (mass(:,k,n+1)<=0.) mass(:,k,n+1)=0.
             ! TODO: dqv, dT 
-        
-        !    dqv(k) = -sum(dm_dt(:,1)*dt)
+        !   Online Coupling with T and qv
+        !    dqv(k) = -sum(dm_dt(:,1)*dt)    ! dm_dt(:,1)-> k=1 fixed??
         !    q(k,n+1)=q(:,n+1)+dqv(k)
         !    dT(k) = -(L*dqv(k))/(rho*Cp)    ! define use L, Cp??
         !    T(k,n+1)=T(:,n+1)+dT(k)
@@ -86,9 +89,9 @@ implicit none
             call compute_conc(dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                               mass(:,k,n),mass(:,k,n+1))
         end do
-            do i = 1, nbin
-            write(90,*) drop_num(i,1,n)
-            end do
+!            do i = 1, nbin
+!            write(90,*) drop_num(i,1,n)
+!            end do
     end do
     ! print*, dmb_dt(:,10)
 

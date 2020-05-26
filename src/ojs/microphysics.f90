@@ -323,21 +323,24 @@ contains
         real, dimension(nbin) :: x, y
         integer :: i,j
 
-        y(1) = 0.
+        y = 0.
         !next_N = 0.
         do i = 1, nbin-1
         ! print*, "i=",i,"mass(i)=",mass(i),"next_m(i)",next_m(i),"mass(i+1)=",mass(i+1)
-            do j = 1, nbin-1
-            if (mass(j) < next_m(i)) then
-                if(mass(j+1) > next_m(i)) then
-                    x(i)=(Nr(j)*(next_m(i)-mass(j+1)))/(mass(j)-mass(j+1))
-                    y(i+1)=Nr(j)-x(i)
+            if (next_m(i)<=0.) then
+                next_N(i)=0.
+            else
+                do j = 1, nbin-1
+                if (mass(j) < next_m(i)) then
+                    if(mass(j+1) > next_m(i)) then
+                    x(i)=(Nr(i)*(next_m(i)-mass(j+1)))/(mass(j)-mass(j+1))
+                    y(i+1)=Nr(i)-x(i)
                     next_N(i)=x(i)+y(i)
                     exit
+                    end if
                 end if
-
+                end do
             end if
-            end do
         !     print*,"i=",i,"Nr(i)=",Nr(i),"x=",x(i),"y=",y(i),"next_N(i)=",next_N(i)
         ! print*, mass(i),mass(i+1),next_N(i)
         end do
