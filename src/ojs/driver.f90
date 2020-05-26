@@ -17,8 +17,6 @@ implicit none
     call read_namelist()
 
     call read_data_init(nlev, lev, temp_in, qv_in, w_in)
-
-
     ! Calculate dz
     call compute_vert_coord(ztop, zbottom, nz, vertical_grid, &
                             z_full, z_half, dz)
@@ -31,7 +29,7 @@ implicit none
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
     allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
-    dt = 0.01; nt = 1000
+    dt = 0.01; nt = 10000
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
     q(:,1)  = qinit
