@@ -7,8 +7,10 @@
 /
 
 &data_nml
-    vert_var = "z",      ! p[hPa] or z[m] , p = pressure
-    temp_var = "theta"       ! T[k] or theta[K] 
+!    vert_var = "z",      ! p[hPa] or z[m] , p = pressure
+!    temp_var = "theta"       ! T[k] or theta[K] 
+    vert_var = "p",      ! p[hPa] or z[m] , p = pressure
+    temp_var = "T"       ! T[k] or theta[K] 
 /
 
 &dynamics_nml
@@ -28,9 +30,9 @@
     rmax              = 1.e-2, ! [m]
     rratio            = 1.258925,
     nbin              = 100,
-    dist_type         = "log_normal",         ! "log_normal", "gamma_dist"
-    Nc                = 1.e+8,      ! [# m-3]
-    qc                = 2.e-3,      ! [kg/kg]
+    dist_type         = "gamma_dist",         ! "log_normal", "gamma_dist"
+    Nc                = 5.e+7,      ! [# m-3]
+    qc                = 2.e-6,      ! [kg/kg]
     ventilation_effect = .false.,
-    mass_scheme       = "reassign"     ! "reassign", "finite_volume", "PPM"
+    mass_scheme       = "PPM"     ! "reassign", "finite_volume", "PPM"
 /
