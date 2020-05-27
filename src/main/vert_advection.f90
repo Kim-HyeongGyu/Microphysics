@@ -63,9 +63,12 @@ contains
 
     ! Set Boundary Condition (Homogeneous Dirichlet BC)
     ! most likely w = 0 at these points
-    if (trim(var) == "Nc") then
-        w_half(1) = 0.; w_half(nz+1) = 0.
-    end if
+ !   if (trim(var) == "Nc") then
+ !       w_half(1) = 0.; w_half(nz+1) = 0.
+!        w_half(1) = 0.5; w_half(nz+1) = 0.
+        w_half(1) = w_full(1); w_half(nz+1) = w_full(1)
+ !   end if
+
     ! do outflow boundary
     flux(ks)   = w_half(ks)*C(ks)  
     flux(ke+1) = w_half(ke+1)*C(ke)
@@ -212,6 +215,7 @@ contains
                     ! extension for Courant numbers > 1
                     if (cn > 1.) Cst = (xx*Cst + Csum)/cn
                 endif   ! }}}
+                !Cst = Cst / dz(kk) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 flux(k) = w_half(k)*Cst
                 ! if (xx > 1.) cflerr = cflerr+1
                 ! cflmaxx = max(cflmaxx,xx)

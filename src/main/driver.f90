@@ -51,6 +51,7 @@ implicit none
     allocate(dm_dt(nbin,nz), dmb_dt(nbin+1,nz))
     allocate(drop_num(nbin,nz,nt))
     drop_num = 0
+    ! 1st layer boundary condition
     ! do k = 1, nz
     !     drop_num(:,k,1) = Nr
     ! end do
@@ -58,7 +59,6 @@ implicit none
     allocate(dTemp(nz), dqv(nz))
     do n = 1, nt-1
         if (n*dt == 1200) w=0  ! at 20 min, w = 0
-        ! 1st layer boundary condition
         drop_num(:,1,n) = Nr
 
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
@@ -67,16 +67,17 @@ implicit none
                                 vertical_advect, "qvapor", q(:,n+1), q(1,1) )
         do i = 1, nbin
             call compute_advection( w, drop_num(i,:,n), dt, nz, dz,             &
-                                    vertical_advect, "Nc", drop_num(i,:,n+1),   &
-                                    drop_num(i,1,1) )
+                                    vertical_advect, "Nc", drop_num(i,:,n+1))!,   &
+                                    !drop_num(i,1,1) )
         end do
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
 
-        do k = 1, nz
+        !do k = 1, nz
+        do k = 1, 2
             call conc_growth( T(k,n+1), q(k,n+1), Pinit(k), &
                               dm_dt(:,k), dmb_dt(:,k) )
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
-            call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
+            call compute_conc( dmb_dt(:,k), drop_num(:,k,n+1), drop_num(:,k,n+1), &
                                mass(:,k,n), mass(:,k,n+1) )
             ! Online Coupling with T and qv
             dqv(k)    = -sum(dm_dt(:,k)*dt)
@@ -87,12 +88,21 @@ implicit none
         end do
         Th(:,n+1) = T(:,n+1)*((Ps/Pinit(:))**(R/Cp))    ! T[K] to Theta[K]
         ! TODO: Check mass...
-        ! qc = sum(drop_num(:,2,n+1)*mass(:,2,n+1))
-
+        qc = sum(drop_num(:,1,n)*mass(:,1,n))
+!print*, drop_num(8,:,n)
 
 ! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
 ! print*, mass(:,1,n+1)
 ! print*, dmb_dt(:,1)
+!print*, n
+!print*, drop_num(:,2,n+1)
+
+!    print*, qc, sum(drop_num(:,2,n)), sum(mass(:,2,n))
+!if(n==10) stop
+!    print*, q(:,n) 
+!    print*, drop_num(8,:,n)
+print*, qc
+if(n==10) stop
     end do
     stop
 
