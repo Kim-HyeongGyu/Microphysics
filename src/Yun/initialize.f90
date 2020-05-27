@@ -6,9 +6,10 @@ contains
         implicit none
         real,               intent(in) :: courant_number
         real, dimension(:), intent(in) :: w, dz
-        integer,           intent(out) :: nt, dt
+        integer,           intent(out) :: nt
+        real,              intent(out) :: dt
 
-        dt = int(minval(courant_number*(dz/abs(w))))
+        dt = minval(courant_number*(dz/abs(w)))
         ! TODO: some compiler makes zero division err
         ! where (w /= 0.)
         !     dt_CFL = CFL_condition*(dz/abs(w))

@@ -15,7 +15,8 @@ contains
                                 CFL_condition, status_case
         namelist /physics_nml/  drop_var, rmin, rmax, rratio,   &
                                 nbin, Nc, qc, dist_type,        &
-                                ventilation_effect
+                                ventilation_effect,             &
+                                mass_scheme
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 
