@@ -30,7 +30,10 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    dt = 0.01; nt = 10000
+    ! 30 min integration -> dt*nt = 30 [min] x 60 [s]
+    ! dt = 0.005; nt = 360000
+    dt = 0.01 ; nt = 180000
+    ! dt = 0.05 ; nt = 36000
     allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
@@ -48,18 +51,20 @@ implicit none
     allocate(dm_dt(nbin,nz), dmb_dt(nbin+1,nz))
     allocate(drop_num(nbin,nz,nt))
     drop_num = 0
-    drop_num(:,1,1) = Nr
     ! do k = 1, nz
     !     drop_num(:,k,1) = Nr
     ! end do
 
     allocate(dTemp(nz), dqv(nz))
     do n = 1, nt-1
+        if (n*dt == 1200) w=0  ! at 20 min, w = 0
+        ! 1st layer boundary condition
+        drop_num(:,1,n) = Nr
+
         call compute_advection( w, Th(:,n), dt, nz, dz,    &
                                 vertical_advect, "THETA", Th(:,n+1), Th(1,1) )
-        ! Note! qv calculated from advected Nr
-        ! call compute_advection( w, q(:,n), dt, nz, dz,     &
-        !                         vertical_advect, "qvapor", q(:,n+1), q(1,1) )
+        call compute_advection( w, q(:,n), dt, nz, dz,     &
+                                vertical_advect, "qvapor", q(:,n+1), q(1,1) )
         do i = 1, nbin
             call compute_advection( w, drop_num(i,:,n), dt, nz, dz,             &
                                     vertical_advect, "Nc", drop_num(i,:,n+1),   &
@@ -73,18 +78,21 @@ implicit none
             mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
             call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
                                mass(:,k,n), mass(:,k,n+1) )
-        !   Online Coupling with T and qv
+            ! Online Coupling with T and qv
             dqv(k)    = -sum(dm_dt(:,k)*dt)
             q (k,n+1) =  q(k,n+1)+dqv(k)
             dTemp(k)  = -(L*dqv(k))/(rho*Cp)
             T (k,n+1) =  T(k,n+1)+dTemp(k)
-            Th(k,n+1) = Th(k,n+1)+dTemp(k)
+            ! Th(k,n+1) = Th(k,n+1)+dTemp(k)
         end do
+        Th(:,n+1) = T(:,n+1)*((Ps/Pinit(:))**(R/Cp))    ! T[K] to Theta[K]
+        ! TODO: Check mass...
+        ! qc = sum(drop_num(:,2,n+1)*mass(:,2,n+1))
+
+
 ! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
 ! print*, mass(:,1,n+1)
 ! print*, dmb_dt(:,1)
-
-        ! if (n == 4) stop
     end do
     stop
 

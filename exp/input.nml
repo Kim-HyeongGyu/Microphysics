@@ -1,12 +1,14 @@
 ! Namelist for 1D box model
 
 &main_nml
-    t_final = 100000                ! End of time [s]
+    t_final = 100000   ! [s]
+!    dt = 0.01,         ! time step [s]
+!    nt = 1000         ! iteration number of time
 /
 
 &data_nml
-   vert_var = "p"       ! p[hPa] or z[m] , p = pressure
-   temp_var = "T"       ! T[k] or theta[K] 
+    vert_var = "z",      ! p[hPa] or z[m] , p = pressure
+    temp_var = "theta"       ! T[k] or theta[K] 
 /
 
 &dynamics_nml
@@ -14,23 +16,21 @@
     top_of_atmosphere = 2000,         ! [m]
     vertical_grid     = "stretching", ! "constant", "stretching"
     vertical_advect   = "PPM",        ! "finite_difference", "finite_volume", "PPM"
-    CFL_condition     = 0.5           ! courant number 
-                                      ! (Courant–Friedrichs–Lewy condition)
-    status_case = "real"              ! "ideal", "real"   T,q status
+    status_case       = "real"        ! "ideal", "real"   T,q status
 /
 
 &physics_nml
-    drop_var = 1, ! >> Choose what variables to use. <<
-                  ! [1] : rmin & rmax, [2] : rmin & rratio
-                  !  -> Even if you don't use a variable, 
-                  !     don't leave it blank.
-    rmin    = 1.e-6, ! [m]
-    rmax    = 1.e-2, ! [m]
-    rratio  = 1.258925,
-    nbin    = 100,
-    dist_type = "log_normal",         ! "log_normal", "gamma_dist"
-    Nc = 1.e+8,      ! [# m-3]
-    qc = 2.e-3,      ! [kg/kg]
+    drop_var          = 1, ! >> Choose what variables to use. <<
+                           ! [1] : rmin & rmax, [2] : rmin & rratio
+                           !  -> Even if you don't use a variable, 
+                           !     don't leave it blank.
+    rmin              = 1.e-6, ! [m]
+    rmax              = 1.e-2, ! [m]
+    rratio            = 1.258925,
+    nbin              = 100,
+    dist_type         = "log_normal",         ! "log_normal", "gamma_dist"
+    Nc                = 1.e+8,      ! [# m-3]
+    qc                = 2.e-3,      ! [kg/kg]
     ventilation_effect = .false.,
-    mass_scheme = "PPM"     ! "reassign", "finite_volume", "PPM"
+    mass_scheme       = "reassign"     ! "reassign", "finite_volume", "PPM"
 /
