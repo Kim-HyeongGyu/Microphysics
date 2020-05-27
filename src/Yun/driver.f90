@@ -1,7 +1,7 @@
 program driver
 use            global_mod
-use            read_nc_mod
-use           write_nc_mod
+use           read_nc_mod
+use          write_nc_mod
 use           file_io_mod, only: read_namelist, &
                                 read_data_init, &
                                     write_data
@@ -11,7 +11,7 @@ use   vert_coordinate_mod, only: compute_vert_coord , &
                                  interpolate_1d
 use         advection_mod, only: compute_advection
 use      microphysics_mod, only: make_bins, conc_dist, &
-                                conc_growth
+                                 conc_growth, compute_conc
 implicit none
 
     call read_namelist()
@@ -30,35 +30,56 @@ implicit none
 
     ! Comupte dt using CFL conditin
     call compute_dt_from_CFL(CFL_condition, dz, winit, nt, dt)
-    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz), dm_dt(nz))
+    dt = 0.01; nt = 10000
+    allocate(Th(nz,nt), q(nz,nt), T(nz,nt), w(nz))
     Th(:,1) = Thinit
     T (:,1) = Th(:,1)*((Pinit(:)/Ps)**(R/Cp))
-    q(:,1)  = qinit
-    w       = winit
-!    q      = 0
-!    q(5,1) = 100.
-    w       = 1.
- 
-    allocate(mass(nbin,nt))
+    q (:,1) = qinit
+    ! w       = winit
+    w       = 0.5
+
+    allocate(mass(nbin,nz,nt), mass_boundary(nbin+1,nz,nt))
     call make_bins()
     call conc_dist()
 
     call show_setup_variables()    
 
     ! Dynamic: time integration
+    allocate(dm_dt(nbin,nz), dmb_dt(nbin+1,nz))
+    allocate(drop_num(nbin,nz,nt))
+    drop_num = 0
+    do k = 1, nz
+        drop_num(:,k,1) = Nr
+    end do
+
     do n = 1, nt-1
-        call compute_advection(w, Th(:,n), dt, nz, dz, &
-                               vertical_advect, Th(:,n+1))
-        call compute_advection(w, q(:,n), dt, nz, dz, &
-                               vertical_advect, q(:,n+1))
+        call compute_advection( w, Th(:,n), dt, nz, dz,    &
+                                vertical_advect, "THETA", Th(:,n+1), Th(1,1) )
+        ! Note! qv calculated from advected Nr
+        ! call compute_advection( w, q(:,n), dt, nz, dz,     &
+        !                         vertical_advect, "qvapor", q(:,n+1) )
+        do i = 1, nbin
+            call compute_advection( w, drop_num(i,:,n), dt, nz, dz,             &
+                                    vertical_advect, "Nc", drop_num(i,:,n+1),   &
+                                    drop_num(i,1,1) )
+        end do
         T(:,n+1) = Th(:,n+1)*((Pinit(:)/Ps)**(R/Cp))    ! Theta[K] to T[K]
 
-        T  = 293.15 ! For test [K]
-        call conc_growth(T(:,n+1), q(:,n+1), Pinit(:), dm_dt(:))
-        mass(:,n+1) = mass(:,n) + dm_dt(1)*dt
-        ! print*, dm_dt(1)
-        ! print*, mass(:,n)
+        do k = 1, nz
+            call conc_growth( T(k,n+1), q(k,n+1), Pinit(k), &
+                              dm_dt(:,k), dmb_dt(:,k) )
+            mass(:,k,n+1) = mass(:,k,n) + dm_dt(:,k)*dt
+            call compute_conc( dmb_dt(:,k), drop_num(:,k,n), drop_num(:,k,n+1), &
+                               mass(:,k,n), mass(:,k,n+1) )
+        end do
+! print*, (mass(:,1,n)*(3./4.)/pi/rho)**(1./3.)   ! <- radius
+! print*, mass(:,1,n+1)
+! print*, dmb_dt(:,1)
+
+        ! if (n == 41) stop
+        ! TODO: Need about latent heat code
     end do
+    stop
 
     call write_data()
  

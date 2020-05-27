@@ -103,10 +103,12 @@ contains
         endif
     else
         if (temp_var == 'theta' ) then  ! input data : z[m] & theta[K]
-            print*, ":: INPUT DATA VARIABLE ERROR ::"
-            print*, ":: 'Pres' is calculated using 'Temp', and"
-            print*, ":: 'Temp' is calculated using 'Pres'."
-            print*, ":: Please check the input data variable."
+            print*, "Note! We assumed that Scale height(H) is 8 [km]"
+            H     = 8000.
+            Th_in = temp_in
+            z_in  = vert_in
+            P_in  = Ps*exp(-(z_in/H))
+            T_in  = Th_in*( (P_in/Ps)**(R/Cp) )
         else                            ! input data : z[m] & T[K]
             z_in = vert_in
             T_in = temp_in
