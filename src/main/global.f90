@@ -15,6 +15,7 @@ implicit none
     real    :: CFL_condition = 0.5
     real    :: rmin, rmax, rratio, Nc, qc
     real    :: Ps  = 1013.      ! [hPa] Surface pressure
+    real    :: P0  = 1013.      ! [hPa] Surface pressure
 
     real, parameter :: PI  = 3.141592
     real, parameter :: R   = 287.       ! [J kg-1 K-1]

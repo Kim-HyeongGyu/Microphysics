@@ -103,8 +103,8 @@ contains
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
         RH    = (e/es)              ! Relative humidity    [%]
         
-        ! S     = RH - 1.
-        S     = 0.01                ! For test
+        S     = RH - 1.
+        !S     = 0.01                ! For test
 
         Vf = 1.; Vfb = 1.
         if (ventilation_effect) then 
@@ -293,10 +293,10 @@ contains
 
     end subroutine ventilation !}}}
 
-    subroutine compute_conc(dmb_dt, Nr, next_Nr, mass, next_m) !{{{
+    subroutine compute_conc(dmb_dt, Nr_in, next_Nr, mass, next_m) !{{{
     implicit none
     real, dimension(nbin+1), intent(in)  :: dmb_dt
-    real, dimension(nbin),   intent(in)  :: Nr, mass, next_m
+    real, dimension(nbin),   intent(in)  :: Nr_in, mass, next_m
     real, dimension(nbin),   intent(out) :: next_Nr
     real, dimension(nbin) :: dm
         ! 1) reassign (redistribution)
@@ -304,10 +304,10 @@ contains
         dm = mass_boundary(2:nbin+1,1,1) - mass_boundary(1:nbin,1,1)
         select case (mass_scheme)
             case ("reassign")
-                call redistribution(Nr, next_Nr, mass, next_m)
+                call redistribution(Nr_in, next_Nr, mass, next_m)
             case ("finite_volume","PPM")
                 ! Conserve number
-                call conc_advection(dmb_dt, Nr, dt, nbin, &
+                call conc_advection(dmb_dt, Nr_in, dt, nbin, &
                                         dm, mass_scheme, next_Nr)
             case default
                 call error_mesg("Not setup mass_scheme option. &

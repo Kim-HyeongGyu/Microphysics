@@ -138,14 +138,14 @@ contains
 
             ! if (diff_scheme == FINITE_VOLUME_PARABOLIC2) then
             ! limiters from Lin (2003), Equation 6 (relaxed constraint)
-                ! do k = ks, ke
-                ! C_left (k) = C(k) - sign( min(abs(slp(k)),       &
-                !                           abs(C_left (k)-C(k))), &
-                !                           slp(k) )
-                ! C_right(k) = C(k) + sign( min(abs(slp(k)),       &
-                !                           abs(C_right(k)-C(k))), &
-                !                           slp(k) )
-                ! enddo
+      !!           do k = ks, ke
+      !!           C_left (k) = C(k) - sign( min(abs(slp(k)),       &
+      !!                                     abs(C_left (k)-C(k))), &
+      !!                                     slp(k) )
+      !!           C_right(k) = C(k) + sign( min(abs(slp(k)),       &
+      !!                                     abs(C_right(k)-C(k))), &
+      !!                                     slp(k) )
+      !!           enddo
             ! else
             ! limiters from Colella and Woodward (1984), Equation 1.10
             do k = ks, ke
