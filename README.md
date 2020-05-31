@@ -26,20 +26,26 @@ $ ./compile.csh     # First, set compiler and options.
 │   │   ├ vert_advection.f90   # calculate vertical advection
 │   │   └ microphysics.f90     # concectration distribution
 │   └── user                   # Test directory for User
-└── exp
-    ├── compile.csh            # compile fortran codes
-    ├── input.nml              # namelist
-    ├── input                  # For input data (T, w, q, ...)
-    ├── output                 # For output data (T, w, q, ...)
-    ├── run.x                  # Excute file
-    └── exec                   # .mod, .o files
-
+├── exp
+│   ├── compile.csh            # compile fortran codes
+│   ├── input.nml              # namelist
+│   ├── input                  # For input data (T, w, q, ...)
+│   ├── output                 # For output data (T, w, q, ...)
+│   ├── run.x                  # Excute file
+│   └── exec                   # .mod, .o files
+└── workdir  # Test for optimizated codes   
 ```
 
+## What's New?
+- Update namelist option for convinience
+- *gfortran*, *ifort*, *pgf90*(+2008 version) compilers can use.
+- Do not need *NetCDF* library
+
 ## TODO
-- [x] Add namelist option(rmin, rmax, rratio)
-- [x] Make bin number(~100)
-- [x] Intrpolate P, T(or theta), RH for advection (+ adiabatic test)
-- [x] Distribution (log, gamma)
-- [x] Droplet growth (2020.04.21 10:00~) `testing...`
+- [ ] Testing physics driver 
+- [ ] Porting redistribution from ncl code
+- [ ] Advection test in streching grid (Conservation test)
+- [ ] +Collection efficiency (from Hall (1980) - JAS)
+- [ ] Terminal velocity (from Beard (1977) -MWR)
+- [ ] SCE (from Bott (1989) -MWR)
 
