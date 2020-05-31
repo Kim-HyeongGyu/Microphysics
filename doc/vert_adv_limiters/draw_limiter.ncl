@@ -1,5 +1,5 @@
-data1 = asciiread("./Nr_from_Colella.txt", -1,"float")
-data2 = asciiread("./Nr_from_Lin.txt", -1,"float")
+data1 = asciiread("./q_from_Colella.txt", -1,"float")
+data2 = asciiread("./q_from_Lin.txt", -1,"float")
 data1 := reshape(data1,(/119999,40/))
 data2 := reshape(data2,(/119999,40/))
 
@@ -19,8 +19,8 @@ res@xyLineThicknesses   = (/4.,4./)
 res@tiXAxisString   = "z [m]"
 res@tiYAxisString   = "N(r)"
 
-res@trYMinF = 0.
-res@trYMaxF = 7.e6
+res@trYMinF = 0.008 
+res@trYMaxF = 0.013 
 res@trXMinF = 0.
 res@trXMaxF = 20. 
 
@@ -29,9 +29,6 @@ res@tmYROn  = False
 res@tmXBMode    = "Explicit"
 res@tmXBValues  = (/0, 10, 20/)
 res@tmXBLabels  = (/"0","500","1000"/)
-res@tmYLMode    = "Explicit"
-res@tmYLValues  = (/0, 1e6, 2e6, 3e6, 4e6, 5e6, 6e6, 7e6/)
-res@tmYLLabels  = (/"0.0~F34~4~F21~10~S~6","1.0~F34~4~F21~10~S~6","2.0~F34~4~F21~10~S~6","3.0~F34~4~F21~10~S~6","4.0~F34~4~F21~10~S~6","5.0~F34~4~F21~10~S~6","6.0~F34~4~F21~10~S~6","7.0~F34~4~F21~10~S~6"/) 
 
 res@pmLegendDisplayMode = "Always"
 res@pmLegendSide        = "Top"
