@@ -1,107 +1,63 @@
 module file_io_mod
-use            global_mod
-use            read_nc_mod
-use            write_nc_mod
-implicit none
-    
+use         namelist_mod
+use    error_handler_mod, only: file_check
 contains
 
-    subroutine read_namelist()  ! {{{
-        ! Set variables
-        namelist /main_nml/     t_final
-        namelist /data_nml/     vert_var, temp_var
-        namelist /dynamics_nml/ num_levels, top_of_atmosphere,  &
-                                vertical_grid, vertical_advect, &
-                                CFL_condition, status_case
-        namelist /physics_nml/  drop_var, rmin, rmax, rratio,   &
-                                nbin, Nc, qc, dist_type,        &
-                                ventilation_effect,             &
-                                mass_scheme
+    subroutine read_input_data(height_in, temp_in, qv_in, w_in)    !{{{
+        real, dimension(:), allocatable, intent(out) :: height_in, temp_in, qv_in, w_in
 
-        open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
-        read  (unit = 8, nml  = main_nml) 
-        read  (unit = 8, nml  = data_nml) 
-        read  (unit = 8, nml  = dynamics_nml) 
-        read  (unit = 8, nml  = physics_nml) 
-        close (unit = 8)
+        integer            :: i, header, nlines, io
+        character(len=100) :: iomsg
+ 
+        header = header_data
+        nlines = 0 
 
-        ! Overide default values for optional arguments
-        nz      = num_levels
-        ztop    = top_of_atmosphere   ! [m]
-    end subroutine read_namelist    ! }}}
+        open (unit=99, file="INPUT/"//file_name, status='old',    &
+              access='sequential', form='formatted', action='read',  &
+              iostat=io, iomsg=iomsg)
+        call file_check(io, iomsg, "READ")
 
+        do
+            read(99,*,iostat=io)
+            if (io/=0) exit
+            nlines = nlines + 1
+        end do
 
+        1 rewind(99)
+        allocate(height_in(nlines-header))
+        allocate(  temp_in(nlines-header))
+        allocate(    qv_in(nlines-header))
+        allocate(     w_in(nlines-header))
 
-    subroutine read_data_init(nlev,lev,temp_in,qv_in,w_in) ! {{{
+        if (header >= 1) then
+            do i = 1, header
+                read(99,*)   ! skip header
+            end do
+        end if
 
-    integer,intent(out) :: nlev
-    real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w_in
-    character(len=5), parameter :: vname1 = "t"
-    character(len=5), parameter :: vname2 = "q"
-    character(len=5), parameter :: vname3 = "w"
-    character(len=300) :: INAME1, INAME2, INAME3, IPATH
-    character(len=6) :: ld_name = "level", l_name= "lev" ! lev dimension_name, lev_var_name
+        if (w_from_data) then
+            do i = 1, nlines-header, 1
+                read(99,*) height_in(i), temp_in(i), qv_in(i), w_in(i)
+            end do
+        else
+            do i = 1, nlines-header, 1
+                read(99,*) height_in(i), temp_in(i), qv_in(i)
+            end do
+            w_in(:) = w_speed
+        end if
 
-     IPATH = './input'
+        ! Convert units
+        ! pressure:     [Pa]     -> [hPa]
+        ! temperature:  [C]      -> [K]
+        ! mixing ratio: [g kg-1] -> [kg kg-1]
+        if ((pres_units .eq. "Pa") .and. (vert_var .eq. "p")) height_in = height_in * 0.01   
+        if ( temp_units .eq. "C"   ) temp_in   = temp_in + 273.15
+        if (   qv_units .eq. "g/kg") qv_in     = qv_in*0.001   
+        ! TODO: processing surface data
 
-     WRITE(INAME1,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname1),'_AUG.nc'
-     WRITE(INAME2,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname2),'_AUG.nc'
-     WRITE(INAME3,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname3),'_AUG.nc'
-
-     call griddims(INAME1,ld_name,nlev)
-
-      allocate(lev(nlev), temp_in(nlev), qv_in(nlev),w_in(nlev))
-     call read_nc_data(INAME1,vname1,l_name,nlev,lev,temp_in)
-     call read_nc_data(INAME2,vname2,l_name,nlev,lev,qv_in)
-     call read_nc_data(INAME3,vname3,l_name,nlev,lev,w_in)
-
-        ! Vertical wind [m s-1]
-      w_in      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
-!        w_in    = w_in*0. + 2.
-
-!      ========== ideal status ==============
-       if (status_case == "ideal") then
-        ! Temperature   [K]
-        temp_in = (/ (I+273, I = nlev,1,-1) /)  ! lapse rate 1K/km
-
-        ! Mixing ratio  [kg kg-1]
-        qv_in(:) = w_in*0.
-        qv_in(5) = 0.5
-        end if     
-
-
-    end subroutine read_data_init   ! }}}
-
-
-    subroutine write_data() ! {{{
-
-    character(len=300) :: ONAME1, ONAME2, OPATH
-    character(len=5), parameter :: vname1 = "T"
-    character(len=5), parameter :: vname2 = "q"
-    character(len=5), parameter :: vname3 = "mass"
-
-     OPATH = './output'
-     WRITE(ONAME1,'(10A)') trim(OPATH),'/',trim(vname1),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
-     WRITE(ONAME2,'(10A)') trim(OPATH),'/',trim(vname2),'_',trim(status_case),'_',trim(vertical_grid),'_',trim(vertical_advect),'_out.nc'
-     call write_nc_data(ONAME1,vname1,nt,nz,z_full,T)
-     call write_nc_data(ONAME2,vname2,nt,nz,z_full,q)
-
-
-        !open(unit = 30, file = "Tout.txt")
-        ! open(unit = 30, file = "output.dat", form='unformatted', &
-        !      status = "unknown", access='direct', recl=4*nz) 
-        !do n = 1, nt
-        !    write(30,*) T(:,n)
-        !end do
-        !close(30)
-
-        !open(unit = 30, file = "qout.txt")
-        ! open(unit = 30, file = "output.dat", form='unformatted', &
-        !      status = "unknown", access='direct', recl=4*nz) 
-        !do n = 1, nt
-        !    write(30,*) q(:,n)
-        !end do
-        !close(30)
-    end subroutine write_data   ! }}}
+        close(99, iostat=io, iomsg=iomsg)
+        call file_check(io, iomsg, "CLOSE")
+        
+    end subroutine read_input_data  !}}}
 
 end module file_io_mod
