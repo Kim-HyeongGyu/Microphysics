@@ -216,7 +216,7 @@ contains
             ! TODO: Need test...
             case (2:4)  ! 2: finite_volume, 3: PPM, 4: PPM (but Lin limiter)
                 ! Conserve number
-                dm = mass_boundary(2:nbin+1) - mass_boundary(1:nbin)
+                ! dm = mass_boundary(2:nbin+1) - mass_boundary(1:nbin)
                 print*, "TODO: Need test..."   
                 stop
             !     call conc_advection( dt, dmb_dt, dm, Nr )
