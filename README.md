@@ -33,6 +33,7 @@ $ ./compile.csh     # First, set compiler and options.
 │   ├── output                 # For output data (T, w, q, ...)
 │   ├── run.x                  # Excute file
 │   └── exec                   # .mod, .o files
+├── post_processing            # Post processing code
 └── workdir  # Test for optimizated codes   
 ```
 
@@ -40,12 +41,13 @@ $ ./compile.csh     # First, set compiler and options.
 - Update namelist option for convinience
 - *gfortran*, *ifort*, *pgf90*(+2008 version) compilers can use.
 - Do not need *NetCDF* library
+- Post Processing is available if you want to use NetCDF format output. (Using *NCL*)
 
 ## TODO
 - [ ] Testing physics driver 
 - [ ] Porting redistribution from ncl code
 - [ ] Advection test in streching grid (Conservation test)
 - [ ] +Collection efficiency (from Hall (1980) - JAS)
-- [ ] Terminal velocity (from Beard (1977) -MWR)
-- [ ] SCE (from Bott (1989) -MWR)
+- [ ] Terminal velocity (from Beard (1977) - MWR)
+- [ ] SCE (from Bott (1998, 2000) - JAS)
 
