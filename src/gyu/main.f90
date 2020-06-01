@@ -10,9 +10,17 @@ use    physics_driver_mod, only: physics_driver
     call model_initialize()
 
     time_loop: do n = 1, nt-1
-        call dynamic_driver()
+        if ( dyn_adv_scheme == 0 ) then
+            continue    ! No dynamics process
+        else
+            call dynamic_driver()
+        end if
 
-        call physics_driver()
+        if ( phy_adv_scheme == 0 ) then
+            continue    ! No physics process
+        else
+            call physics_driver()
+        end if
 
         ! call write_data()
     end do time_loop

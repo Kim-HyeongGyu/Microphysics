@@ -22,7 +22,8 @@
     nz            = 40,      ! [#] Number of vertical grid
     ztop          = 2000,    ! [m] Model top
     grid_type     = 2,       ! 1: constant, 2: stretching
-    dyn_adv_scheme= 2,       ! 1: finite difference, 2: finite volume, 3: PPM, 4: Lin
+    dyn_adv_scheme= 0,       ! 0: No advection, 1: finite difference, 
+                             ! 2: finite volume, 3: PPM, 4: Lin
 /
 
 &physics_nml
@@ -34,6 +35,6 @@
     dist_type     = 1,       ! 1: Log-normal, 2: Gamma
     Nc            = 1.e+8,   ! [# m-3]
     qc            = 2.e-3,   ! [kg/kg]
-    phy_adv_scheme= 1        ! 1:reassign, 2: finite volume, 3: PPM
+    phy_adv_scheme= 0        ! 0: no physics, 1:reassign, 2: finite volume, 3: PPM
     ventilation_effect = .false.,
 /
