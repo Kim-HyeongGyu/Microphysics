@@ -42,6 +42,16 @@ $ ./compile.csh     # First, set compiler and options.
 - *gfortran*, *ifort*, *pgf90*(+2008 version) compilers can use.
 - Do not need *NetCDF* library
 - Post Processing is available if you want to use NetCDF format output. (Using *NCL*)
+  
+
+## Post Processing
+If you compile and excute model, post-processing code(`/post_processing/bin2nc.ncl`) can use for converting from binary to NetCDF. For post-processing, link(or copy) `bin2nc.ncl` code and run.
+```
+$ ./compile.csh     # Link post-processing automatically
+$ cd ./OUTPUT
+$ ncl bin2nc.ncl
+```  
+
 
 ## TODO
 - [ ] Testing physics driver 
