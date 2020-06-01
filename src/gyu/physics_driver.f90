@@ -10,22 +10,26 @@ contains
         real, dimension(size(mass)) :: update_mass
 
         update_mass = mass(:,k)
+
         vertical_loop: do k = 1, nz 
+
             ! Calculate mass tendency
             call conc_growth( T(k), qv(k), Prs(k), update_mass, & 
                               dm_dt(:,k), dmb_dt(:,k) )
 
             ! Compute concentration
             call compute_conc( dmb_dt(:,k), Nr(:,k), mass(:,k), update_mass )
+
+            ! Online Coupling with T and qv
+            ! dqv(k)    = -sum(dm_dt(:,k)*dt)
+            ! q (k) =  q(k,n+1)+dqv(k)
+            ! dTemp(k)  = -(L*dqv(k))/(rho*Cp)
+            ! T (k) = T(k)+dTemp(k)
             
         end do vertical_loop
         print*, "check physics driver"
         stop
 
-
-        ! call compute_conc( dmb_dt(:), drop_num(:), mass(:))
-        ! call compute_conc(dmb_dt)
-        
     end subroutine physics_driver
 
     subroutine conc_growth(temp, qv, Pinit, mass, dm_dt, dmb_dt) !{{{
