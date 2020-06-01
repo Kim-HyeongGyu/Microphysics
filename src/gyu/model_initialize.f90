@@ -10,7 +10,6 @@ contains
     subroutine model_initialize()
 
         call read_namelist()
-        call write_model_setup_info()
 
         ! Read data from INPUT/...
         call read_input_data( height_in, temp_in, qv_in, w_in )
@@ -25,6 +24,8 @@ contains
         call initialize_microphysics( radius, radius_boundary, & 
                                       mass, mass_boundary,     & 
                                       Nr, dm_dt, dmb_dt        )   
+
+        call write_model_setup_info()
 
         call model_initialize_end()
 

@@ -25,7 +25,7 @@ real    :: zbottom = 0.                    ! [m] model bottom
 real    :: ztop    = 1000.                 ! [m] model top
 real    :: rmin    = 1.e-6                 ! [m] minimum radius of bins 
 real    :: rmax    = 1.e-2                 ! [m] maximum radius of bins 
-real    :: rratio                          ! [#] radius ratio of bins   
+real    :: rratio  = 1.05                  ! [#] radius ratio of bins   
 real    :: Nc      = 1.e8                  ! [# m-3] number of droplets     
 real    :: qc      = 2.e-3                 ! [kg kg-1] cloud mass mixing ratio
 real    :: w_speed = 0.5                   ! [m s-1] vertical wind speed
