@@ -17,8 +17,8 @@ contains
         call make_bins(radius, radius_boundary, mass, mass_boundary)
         call conc_dist(Nc, qc, radius, radius_boundary, Nr)
 
-        allocate( dm_dt(nbin,nz))
-        allocate(dmb_dt(nbin,nz))
+        allocate( dm_dt(nbin  ,nz))
+        allocate(dmb_dt(nbin+1,nz))
 
     end subroutine initialize_microphysics
 
