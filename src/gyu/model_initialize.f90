@@ -30,19 +30,34 @@ contains
 
     end subroutine model_initialize
 
-    subroutine model_initialize_end()
+    subroutine model_initialize_end()   !{{{
+
+        ! Deallocate input data
+        if (allocated(height_in)) deallocate(height_in)
+        if (allocated(  temp_in)) deallocate(  temp_in)
+        if (allocated(    qv_in)) deallocate(    qv_in)
+        if (allocated(     w_in)) deallocate(     w_in)
+
+    end subroutine model_initialize_end !}}}
+
+    subroutine model_close()    !{{{
 
         ! Deallocate global variables
-        if (allocated(      height_in)) deallocate(      height_in)
-        if (allocated(        temp_in)) deallocate(        temp_in)
-        if (allocated(          qv_in)) deallocate(          qv_in)
-        if (allocated(           w_in)) deallocate(           w_in)
-        ! if (allocated(         radius)) deallocate(         radius)
-        ! if (allocated(radius_boundary)) deallocate(radius_boundary)
-        ! if (allocated(           mass)) deallocate(           mass)
-        ! if (allocated(  mass_boundary)) deallocate(  mass_boundary)
-        ! if (allocated(             Nr)) deallocate(             Nr)
+        if (allocated(         z_full)) deallocate(         z_full)
+        if (allocated(         z_half)) deallocate(         z_half)
 
-    end subroutine model_initialize_end
+        if (allocated(         radius)) deallocate(         radius)
+        if (allocated(radius_boundary)) deallocate(radius_boundary)
+        if (allocated(           mass)) deallocate(           mass)
+        if (allocated(  mass_boundary)) deallocate(  mass_boundary)
+        if (allocated(             Nr)) deallocate(             Nr)
+
+        ! Deallocate advecttion variables
+        ! if (allocated(           zwts)) deallocate(           zwts)
+        ! if (allocated(            dzs)) deallocate(            dzs)
+
+        print*, "Successfully run!"
+        
+    end subroutine model_close  !}}}
 
 end module model_initialize_mod

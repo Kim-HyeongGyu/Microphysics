@@ -1,4 +1,5 @@
 module file_io_mod
+use           global_mod
 use         namelist_mod
 use    error_handler_mod, only: file_check
 contains
@@ -59,5 +60,86 @@ contains
         call file_check(io, iomsg, "CLOSE")
         
     end subroutine read_input_data  !}}}
+
+    subroutine write_data(n)    !{{{
+        integer, intent(in) :: n
+
+        integer             :: i
+        real, dimension(nt) :: time
+
+        if (n == 1) then 
+            ! [m] 1D model full coordinate: [nlev]
+            call write_var1d( n, z_full, "z_full.bin" )
+            ! [m] 1D model half coordinate: [nlev+1]
+            call write_var1d( n, z_half, "z_half.bin" )
+
+            ! [m] droplet radius: [nbin]
+            call write_var1d( n,          radius,          "radius.bin" )
+            ! [m] radius at boundary: [nbin+1]
+            call write_var1d( n, radius_boundary, "radius_boundary.bin" )
+
+            ! [kg] droplet mass: [nbin] x [nlev]
+            call write_var2d( n,            mass,            "mass.bin" )
+            ! [kg] mass at boundary: [nbin+1] x [nlev]
+            call write_var2d( n,   mass_boundary,   "mass_boundary.bin" )
+        end if
+
+        if (n == nt) then
+            ! [s] Integrated time coordinate: [nt-1]
+            time = (/ (i, i=1, n) /) * dt
+            call write_var1d( n,  time,  "time.bin" )
+        end if
+
+        ! Interpolated variables
+        call write_var1d( n,   Prs,   "Prs.bin" )     ! [hPa] pressure: [nlev]
+        call write_var1d( n,     T,     "T.bin" )     ! [K] temperature: [nlev]
+        call write_var1d( n, THETA, "THETA.bin" )     ! [K] potential temperature: [nlev]
+        call write_var1d( n,    qv,    "qv.bin" )     ! [kg kg] mixing ratio: [nlev]
+        call write_var1d( n,     W,     "W.bin" )     ! [m s-1] vertical wind: [nlev+1]
+
+        ! Variables for bins: [nbin] x [nlev]
+        call write_var2d( n,    Nr,    "Nr.bin" )     ! [# m-3] number of droplet
+
+        ! Mass tendency: [nbin] x [nlev], [nbin+1] x [nlev]
+        call write_var2d( n,  dm_dt,  "dm_dt.bin" )   ! [kg s-1] Mass tendency
+        call write_var2d( n, dmb_dt, "dmb_dt.bin" )   ! [kg s-1] at boundary
+        
+    end subroutine write_data   !}}}
+
+    subroutine write_var1d( n, variable, filename )   !{{{
+        integer,            intent(in) :: n
+        real, dimension(:), intent(in) :: variable
+        character(len=*),   intent(in) :: filename
+
+        ! Output data: Binary format
+        if (n == 1) then
+            open(21, file="OUTPUT/"//trim(filename), action="write", status="replace")
+        else
+            open(21, file="OUTPUT/"//trim(filename), action="write", position="append")
+        end if
+
+        write(21,*) variable
+
+        close(21)
+        
+    end subroutine write_var1d    !}}}
+
+    subroutine write_var2d( n, variable, filename )   !{{{
+        integer,              intent(in) :: n
+        real, dimension(:,:), intent(in) :: variable
+        character(len=*),     intent(in) :: filename
+
+        ! Output data: Binary format
+        if (n == 1) then
+            open(21, file="OUTPUT/"//trim(filename), action="write", status="replace")
+        else
+            open(21, file="OUTPUT/"//trim(filename), action="write", position="append")
+        end if
+
+        write(21,*) variable
+
+        close(21)
+        
+    end subroutine write_var2d    !}}}
 
 end module file_io_mod

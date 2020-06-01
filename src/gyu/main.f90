@@ -1,15 +1,21 @@
 program driver
 use          namelist_mod
-use  model_initialize_mod, only: model_initialize
+use           file_io_mod, only: write_data
+use  model_initialize_mod, only: model_initialize, &
+                                 model_close
 use   dynamics_driver_mod, only: dynamic_driver
 use    physics_driver_mod, only: physics_driver
 
     integer :: n, k
 
-    ! Setup model 
+    !-- Build model 
     call model_initialize()
 
-    time_loop: do n = 1, nt-1
+    !-- Write initial info
+    call write_data(1)
+
+    !-- Main
+    time_loop: do n = 2, nt
         if ( dyn_adv_scheme == 0 ) then
             continue    ! No dynamics process
         else
@@ -22,10 +28,9 @@ use    physics_driver_mod, only: physics_driver
             call physics_driver()
         end if
 
-        ! call write_data()
+        call write_data(n)
     end do time_loop
 
-    print*, "Successfully run!"
-    ! call model_close()
+    call model_close()
 
 end program driver
