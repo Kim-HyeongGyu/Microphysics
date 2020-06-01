@@ -21,6 +21,7 @@ set modules  = (         global.f90 \
 set execdir = exec
 
 if ( ! -d $execdir ) mkdir $execdir
+if ( ! -d OUTPUT   ) mkdir OUTPUT
 cd $execdir
 \rm ../run.x *.o
 foreach mod ($modules)
@@ -33,6 +34,8 @@ ln -sf ../${src_dir}/main.f90
 
 $compiler $FFLAGS main.f90 -o ../run.x *.o
 cd .. 
+
+ln -sf ../../post_processing/bin2nc.ncl ./OUTPUT/.  # for PostProcessing (optional)
 
 ./run.x
 # ============================================================================
