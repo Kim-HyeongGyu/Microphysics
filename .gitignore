@@ -5,6 +5,7 @@
 *.png
 *.gif
 *.txt
+*.bin
 a.out
 exec
 run.x
