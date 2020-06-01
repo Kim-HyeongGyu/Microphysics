@@ -85,7 +85,7 @@ contains
         end if
 
         if (n == nt) then
-            ! [s] Integrated time coordinate: [nt-1]
+            ! [s] Integrated time coordinate: [nt]
             time = (/ (i, i=1, n) /) * dt
             call write_var1d( n,  time,  "time.bin" )
         end if
