@@ -14,6 +14,7 @@ set modules  = (         global.f90 \
                 vert_coordinate.f90 \
                    microphysics.f90 \
                model_initialize.f90 \
+                     substeping.f90 \
                 dynamics_driver.f90 \
                  physics_driver.f90 )
 
