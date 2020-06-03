@@ -3,21 +3,37 @@ use             global_mod
 use           namelist_mod
 use           constant_mod
 use      error_handler_mod, only: error_mesg
+use         substeping_mod, only: time_substeping
 contains
 
     subroutine dynamic_driver()
-        integer :: i
-        
-        call compute_advection( dt, W, dz, THETA )
-        call compute_advection( dt, W, dz, qv    )
+        implicit none
+        integer :: i, n
+        integer :: num_substep
+        real    :: delta_time
 
-        ! Advect each size of droplet in bins
-        drop_loop: do i = 1, nbin, 1
-            call compute_advection( dt, W, dz, Nr(i,:) )
-        end do drop_loop
+        num_substep = 1
+        delta_time = dt
+   
+        call time_substeping( W, dz, dt, num_substep )
+
+        substeping_loop: do n = 1, num_substep, 1
+
+            call compute_advection( dt, W, dz, THETA )
+            call compute_advection( dt, W, dz, qv    )
+
+            ! Advect each size of droplet in bins
+            drop_loop: do i = 1, nbin, 1
+                call compute_advection( dt, W, dz, Nr(i,:) )
+            end do drop_loop
+            
+        end do substeping_loop
 
         ! Convert Theta[K] to T[K] for physics process
         T(:) = THETA(:)*((Prs(:)/P0)**(R/Cp))
+
+        ! Reinit dt
+        dt = delta_time 
 
     end subroutine dynamic_driver
 
@@ -235,7 +251,6 @@ contains
                     ! extension for Courant numbers > 1
                     if (cn > 1.) Cst = (xx*Cst + Csum)/cn
                 endif
-                Cst = Cst / dz(kk)  ! for conservation
                 flux(k) = w_half(k)*Cst
                 ! if (xx > 1.) cflerr = cflerr+1
                 ! cflmaxx = max(cflmaxx,xx)

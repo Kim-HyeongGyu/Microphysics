@@ -87,7 +87,7 @@ contains
         if (n == nt) then
             ! [s] Integrated time coordinate: [nt]
             time = (/ (i, i=1, n) /) * dt
-            call write_var1d( n,  time,  "time.bin" )
+            call write_var1d( 1,  time,  "time.bin" )
         end if
 
         ! Interpolated variables
@@ -113,12 +113,14 @@ contains
 
         ! Output data: Binary format
         if (n == 1) then
-            open(21, file="OUTPUT/"//trim(filename), action="write", status="replace")
+            open(21, file="OUTPUT/"//trim(filename), action="write", & 
+                     form="unformatted", status="replace")
         else
-            open(21, file="OUTPUT/"//trim(filename), action="write", position="append")
+            open(21, file="OUTPUT/"//trim(filename), action="write", &
+                     form="unformatted", position="append")
         end if
 
-        write(21,*) variable
+        write(21) variable
 
         close(21)
         
@@ -131,12 +133,14 @@ contains
 
         ! Output data: Binary format
         if (n == 1) then
-            open(21, file="OUTPUT/"//trim(filename), action="write", status="replace")
+            open(21, file="OUTPUT/"//trim(filename), action="write", & 
+                     form="unformatted", status="replace")
         else
-            open(21, file="OUTPUT/"//trim(filename), action="write", position="append")
+            open(21, file="OUTPUT/"//trim(filename), action="write", &
+                     form="unformatted", position="append")
         end if
 
-        write(21,*) variable
+        write(21) variable
 
         close(21)
         
