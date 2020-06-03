@@ -78,7 +78,7 @@ contains
         do i = 1, nbin
             m(i) = ( mb(i)+mb(i+1) ) / 2.
             r(i) = ( (3./4)/(PI*rho)*m(i) )**(1./3.)
-        enddo
+        enddo                                          
 
         radius             = r
         radius_boundary    = rb
@@ -103,8 +103,8 @@ contains
         e     = Pinit * qv/0.622    ! vapor pressure       [hPa]
         RH    = (e/es)              ! Relative humidity    [%]
         
-        ! S     = RH - 1.
-        S     = 0.01                ! For test
+        S     = RH - 1.
+        !S     = 0.01                ! For test
 
         Vf = 1.; Vfb = 1.
         if (ventilation_effect) then 
@@ -137,10 +137,10 @@ contains
         es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
         ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
 
-        Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )
+        Fk = ( (L/(Rv*temp))-1. ) * ( L/(Ka*temp) )    
         Fd = ( Rv*temp ) / ( (Dv*(1000./Pinit)) * (es*100.) )
         ! Refer to Rogers & Yau (1996), 103p - Table 7.1 caption,
-        ! "Dv must therefore be multiplied by (1000./P)"
+        ! "Dv must therefore be multiplied by (1000./P)"        
         
     end subroutine cal_es_Fk_Fd!}}}
 
@@ -293,10 +293,10 @@ contains
 
     end subroutine ventilation !}}}
 
-    subroutine compute_conc(dmb_dt, Nr, next_Nr, mass, next_m) !{{{
+    subroutine compute_conc(dmb_dt, Nr_in, next_Nr, mass, next_m) !{{{
     implicit none
     real, dimension(nbin+1), intent(in)  :: dmb_dt
-    real, dimension(nbin),   intent(in)  :: Nr, mass, next_m
+    real, dimension(nbin),   intent(in)  :: Nr_in, mass, next_m
     real, dimension(nbin),   intent(out) :: next_Nr
     real, dimension(nbin) :: dm
         ! 1) reassign (redistribution)
@@ -304,10 +304,10 @@ contains
         dm = mass_boundary(2:nbin+1,1,1) - mass_boundary(1:nbin,1,1)
         select case (mass_scheme)
             case ("reassign")
-                call redistribution(Nr, next_Nr, mass, next_m)
+                call redistribution(Nr_in, next_Nr, mass, next_m)
             case ("finite_volume","PPM")
                 ! Conserve number
-                call conc_advection(dmb_dt, Nr, dt, nbin, &
+                call conc_advection(dmb_dt, Nr_in, dt, nbin, &
                                         dm, mass_scheme, next_Nr)
             case default
                 call error_mesg("Not setup mass_scheme option. &
@@ -323,21 +323,24 @@ contains
         real, dimension(nbin) :: x, y
         integer :: i,j
 
-        y(1) = 0.
+        y = 0.
         !next_N = 0.
         do i = 1, nbin-1
         ! print*, "i=",i,"mass(i)=",mass(i),"next_m(i)",next_m(i),"mass(i+1)=",mass(i+1)
-            do j = 1, nbin-1
-            if (mass(j) < next_m(i)) then
-                if(mass(j+1) > next_m(i)) then
-                    x(i)=(Nr(j)*(next_m(i)-mass(j+1)))/(mass(j)-mass(j+1))
-                    y(i+1)=Nr(j)-x(i)
+            if (next_m(i)<=0.) then
+                next_N(i)=0.
+            else
+                do j = 1, nbin-1
+                if (mass(j) < next_m(i)) then
+                    if(mass(j+1) > next_m(i)) then
+                    x(i)=(Nr(i)*(next_m(i)-mass(j+1)))/(mass(j)-mass(j+1))
+                    y(i+1)=Nr(i)-x(i)
                     next_N(i)=x(i)+y(i)
                     exit
+                    end if
                 end if
-
+                end do
             end if
-            end do
         !     print*,"i=",i,"Nr(i)=",Nr(i),"x=",x(i),"y=",y(i),"next_N(i)=",next_N(i)
         ! print*, mass(i),mass(i+1),next_N(i)
         end do

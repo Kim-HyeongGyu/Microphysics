@@ -34,30 +34,53 @@ contains
 
     subroutine read_data_init(nlev,lev,temp_in,qv_in,w_in) ! {{{
 
+    integer :: i
     integer,intent(out) :: nlev
     real, dimension(:),allocatable,intent(out) :: lev, temp_in, qv_in, w_in
     character(len=5), parameter :: vname1 = "t"
     character(len=5), parameter :: vname2 = "q"
     character(len=5), parameter :: vname3 = "w"
     character(len=300) :: INAME1, INAME2, INAME3, IPATH
-    character(len=6) :: ld_name = "level", l_name= "lev" ! lev dimension_name, lev_var_name
+    character(len=6) :: ld_name = "lev", l_name= "lev" ! lev dimension_name, lev_var_name
 
      IPATH = './input'
 
-     WRITE(INAME1,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname1),'_AUG.nc'
-     WRITE(INAME2,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname2),'_AUG.nc'
-     WRITE(INAME3,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname3),'_AUG.nc'
+
+     WRITE(INAME1,'(4A)') trim(IPATH),'/input_sounding_',trim(vname1),'.nc'
+     WRITE(INAME2,'(4A)') trim(IPATH),'/input_sounding_',trim(vname2),'.nc'
+!     WRITE(INAME1,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname1),'_AUG.nc'
+!     WRITE(INAME2,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname2),'_AUG.nc'
+!     WRITE(INAME3,'(4A)') trim(IPATH),'/ERA_Interim_',trim(vname3),'_AUG.nc'
 
      call griddims(INAME1,ld_name,nlev)
 
-      allocate(lev(nlev), temp_in(nlev), qv_in(nlev),w_in(nlev))
+     allocate(lev(nlev), temp_in(nlev), qv_in(nlev),w_in(nlev))
      call read_nc_data(INAME1,vname1,l_name,nlev,lev,temp_in)
      call read_nc_data(INAME2,vname2,l_name,nlev,lev,qv_in)
-     call read_nc_data(INAME3,vname3,l_name,nlev,lev,w_in)
+     ! reverse z(bottom->top)
+     lev = lev(nlev:1:-1)
+     temp_in=temp_in(nlev:1:-1)
+     qv_in=qv_in(nlev:1:-1)
+!     call read_nc_data(INAME3,vname3,l_name,nlev,lev,w_in)
+
+! =============================== read txt ======================
+!     nlev = 81
+!     allocate(lev(nlev), temp_in(nlev), qv_in(nlev),w_in(nlev))
+!        open(10,FILE='./input/input_sounding.txt',STATUS='old')
+!        do i = 1, nlev
+!            READ(10,*) lev(i), temp_in(i), qv_in(i)
+!        end do
+!        lev(1)=0.
+!        qv_in = qv_in*0.001  !  g/kg -> kg/kg
+! ===============================================================
+
+
 
         ! Vertical wind [m s-1]
-      w_in      = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
-!        w_in    = w_in*0. + 2.
+!       w_in    = sin( (/ (I, I = 1,nlev*2,2) /) / 10. )
+!       w_in    = w_in*0. + 2.
+        w_in    = 0.5
+  
 
 !      ========== ideal status ==============
        if (status_case == "ideal") then

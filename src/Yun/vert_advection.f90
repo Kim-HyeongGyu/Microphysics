@@ -63,13 +63,16 @@ contains
 
     ! Set Boundary Condition (Homogeneous Dirichlet BC)
     ! most likely w = 0 at these points
-    if ( (trim(var) == "qvapor") .or. (trim(var) == "Nc")) then
-        w_half(1) = 0.; w_half(nz+1) = 0.
-    end if
+ !   if (trim(var) == "Nc") then
+ !       w_half(1) = 0.; w_half(nz+1) = 0.
+!        w_half(1) = 0.5; w_half(nz+1) = 0.
+        w_half(1) = w_full(1); w_half(nz+1) = w_full(1)
+ !   end if
+
     ! do outflow boundary
-    flux(ks)   = w_half(ks)*C(ks)   / dz(ks)
-    flux(ke+1) = w_half(ke+1)*C(ke) / dz(ke)
-    if ( present(Csfc) ) flux(ks) = w_half(ks)*Csfc / dz(ks)
+    flux(ks)   = w_half(ks)*C(ks)  
+    flux(ke+1) = w_half(ke+1)*C(ke)
+    if ( present(Csfc) ) flux(ks) = w_half(ks)*Csfc
 
     select case (scheme)
         ! 1) 2nd-order Finite difference scheme {{{
@@ -89,12 +92,10 @@ contains
                     if (k == ks) cycle          ! inflow
                     cn  = dt*w_half(k)/dz(k-1)  ! courant number
                     Cst = C(k-1) + 0.5*slope(k-1)*(1.-cn)
-                    Cst = Cst / dz(k-1)
                 else
                     if (k == ke+1) cycle        ! inflow
                     cn  = -dt*w_half(k)/dz(k)
                     Cst = C(k) - 0.5*slope(k)*(1.-cn)
-                    Cst = Cst / dz(k)
                 end if
 
                 flux(k) = w_half(k) * Cst
@@ -137,14 +138,14 @@ contains
 
             ! if (diff_scheme == FINITE_VOLUME_PARABOLIC2) then
             ! limiters from Lin (2003), Equation 6 (relaxed constraint)
-                ! do k = ks, ke
-                ! C_left (k) = C(k) - sign( min(abs(slp(k)),       &
-                !                           abs(C_left (k)-C(k))), &
-                !                           slp(k) )
-                ! C_right(k) = C(k) + sign( min(abs(slp(k)),       &
-                !                           abs(C_right(k)-C(k))), &
-                !                           slp(k) )
-                ! enddo
+      !!           do k = ks, ke
+      !!           C_left (k) = C(k) - sign( min(abs(slp(k)),       &
+      !!                                     abs(C_left (k)-C(k))), &
+      !!                                     slp(k) )
+      !!           C_right(k) = C(k) + sign( min(abs(slp(k)),       &
+      !!                                     abs(C_right(k)-C(k))), &
+      !!                                     slp(k) )
+      !!           enddo
             ! else
             ! limiters from Colella and Woodward (1984), Equation 1.10
             do k = ks, ke
@@ -214,7 +215,7 @@ contains
                     ! extension for Courant numbers > 1
                     if (cn > 1.) Cst = (xx*Cst + Csum)/cn
                 endif   ! }}}
-                Cst = Cst / dz(kk)  ! for conservation
+                !Cst = Cst / dz(kk) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 flux(k) = w_half(k)*Cst
                 ! if (xx > 1.) cflerr = cflerr+1
                 ! cflmaxx = max(cflmaxx,xx)
@@ -233,8 +234,7 @@ contains
             do k = ks, ke
                 ! Note: for conserve quantity, dz index is different.
                 !      Discuss with minwoo (2020.04.20)
-                ! dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
-                dC_dt     = - ( flux(k+1) - flux(k) )
+                dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
                 next_C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")

@@ -89,17 +89,17 @@ contains
         if (temp_var == 'theta' ) then  ! input data : P[hPa] & theta[K]
             Th_in = temp_in
             P_in  = vert_in
-            T_in  = Th_in*((P_in/Ps)**(R/Cp))
+            T_in  = Th_in*((P_in/P0)**(R/Cp))
             Tv    = T_in*(1+(0.61*qv_in))
             H     = (R*Tv)/g
-            z_in  = -H*(log(P_in/Ps))
+            z_in  = -H*(log(P_in/P0))
         else                            ! input data : P[hPa] & T[K]
             P_in = vert_in
             T_in = temp_in
             Tv   = T_in*(1+(0.61*qv_in))
             H    = (R*Tv)/g
-            z_in = -H*(log(P_in/Ps))
-            Th_in = T_in*((Ps/P_in)**(R/cp))
+            z_in = -H*(log(P_in/P0))
+            Th_in = T_in*((P0/P_in)**(R/cp))
         endif
     else
         if (temp_var == 'theta' ) then  ! input data : z[m] & theta[K]
@@ -108,14 +108,14 @@ contains
             Th_in = temp_in
             z_in  = vert_in
             P_in  = Ps*exp(-(z_in/H))
-            T_in  = Th_in*( (P_in/Ps)**(R/Cp) )
+            T_in  = Th_in*( (P_in/P0)**(R/Cp) )
         else                            ! input data : z[m] & T[K]
             z_in = vert_in
             T_in = temp_in
             Tv   = T_in*(1+(0.61*qv_in))
             H    = (R*Tv)/g
             P_in = Ps*exp(-(z_in/H))
-            Th_in = T_in*((Ps/P_in)**(R/cp))
+            Th_in = T_in*((P0/P_in)**(R/cp))
         endif
     endif
 
