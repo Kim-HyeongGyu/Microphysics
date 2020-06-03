@@ -116,7 +116,7 @@ contains
 
         real :: d0  ! diameter [um]
         real :: T0, P0, l0, mu0
-        real :: rho_air, drho, mu
+        real :: rho_air, drho
         real :: l, C1, C2, C3, Csc, Cl
         real :: b0, b1, b2, b3, b4, b5, b6
         real :: Da, X, Y, Re, Bo, Np
