@@ -86,6 +86,7 @@ contains
     real, dimension(size(qv_in)) :: H             ! [m] scale height
 
     if (.not. allocated( P_out)) allocate( P_out(size(z_full)))
+    if (.not. allocated( T_out)) allocate( T_out(size(z_full)))
     if (.not. allocated(Th_out)) allocate(Th_out(size(z_full)))
     if (.not. allocated(qv_out)) allocate(qv_out(size(z_full)))
     if (.not. allocated( w_out)) allocate( w_out(size(z_half)))
