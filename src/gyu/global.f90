@@ -22,6 +22,10 @@ implicit none
     real, dimension(:), allocatable :: qv           ! [kg kg] mixing ratio
     real, dimension(:), allocatable :: W            ! [m s-1] vertical wind
 
+    ! For surface data
+    real :: THETA_sfc                               ! [K] potential temperature
+    real :: qv_sfc                                  ! [kg kg] mixing ratio
+
     ! Variables for bins
     real, dimension(  :), allocatable :: radius           ! [m] droplet radius
     real, dimension(  :), allocatable :: radius_boundary  ! [m] radius at boundary

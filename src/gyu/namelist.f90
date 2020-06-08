@@ -29,6 +29,7 @@ real    :: rratio  = 1.05                  ! [#] radius ratio of bins
 real    :: Nc      = 1.e8                  ! [# m-3] number of droplets     
 real    :: qc      = 2.e-3                 ! [kg kg-1] cloud mass mixing ratio
 real    :: w_speed = 0.5                   ! [m s-1] vertical wind speed
+real    :: w_zero_time = -1                ! [s] Time at zero vertical wind
 
 logical :: ventilation_effect = .false.    ! ventilation effect
 logical :: surface_data       = .false.
@@ -62,6 +63,7 @@ contains
         namelist /dynamics_nml/ nz,             &
                                 ztop,           &
                                 grid_type,      &
+                                w_zero_time,    &
                                 dyn_adv_scheme
         namelist /physics_nml/  drop_var,       &
                                 rmin,           &

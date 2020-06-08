@@ -6,8 +6,10 @@ use     error_handler_mod, only: error_mesg
 use        substeping_mod, only: time_substeping
 contains
 
-    subroutine physics_driver()
+    subroutine physics_driver(tidx)
         implicit none
+        integer, intent(in) :: tidx
+
         integer :: k, n
         integer :: num_substep
         real    :: delta_time
@@ -322,10 +324,10 @@ contains
     ! https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
 
     implicit none
-    real,                  intent(in   ) :: dt
-    real,    dimension(:), intent(in   ) :: w_half
-    real,    dimension(:), intent(in   ) :: dz
-    real,    dimension(:), intent(inout) :: C
+    real,               intent(in   ) :: dt
+    real, dimension(:), intent(in   ) :: w_half
+    real, dimension(:), intent(in   ) :: dz
+    real, dimension(:), intent(inout) :: C
 
     integer :: k, kk
     integer :: ks, ke, kstart, kend
@@ -344,7 +346,7 @@ contains
     logical :: do_outflow_bnd = .true.
 
     ! set default values for optional arguments
-    if (dyn_adv_scheme == 1) do_outflow_bnd = .false.
+    ! if (phy_adv_scheme == 1) do_outflow_bnd = .false.
 
     ! vertical indexing
     ks = 1;  ke = size(C)

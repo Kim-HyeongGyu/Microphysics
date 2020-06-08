@@ -19,13 +19,13 @@ use    physics_driver_mod, only: physics_driver
         if ( dyn_adv_scheme == 0 ) then
             continue    ! No dynamics process
         else
-            call dynamic_driver()
+            call dynamic_driver(n)
         end if
 
         if ( phy_adv_scheme == 0 ) then
             continue    ! No physics process
         else
-            call physics_driver()
+            call physics_driver(n)
         end if
 
         call write_data(n)

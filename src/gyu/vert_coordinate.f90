@@ -57,7 +57,9 @@ contains
                                  T_out, &
                                 Th_out, &
                                 qv_out, &
-                                 w_out  )
+                                 w_out, &
+                              THETAsfc, &
+                                  qvsfc )
 
 !!!!! IN : character :: vert_var, temp_var
 !          integer   :: nz, nlev
@@ -80,7 +82,7 @@ contains
 
     integer                      :: i, j, k
     real                         :: d1, d2
-    real                         :: Psfc, Tsfc, qvsfc
+    real                         :: Psfc, Tsfc, qvsfc, THETAsfc
     real, dimension(size(qv_in)) :: z_in, P_in, T_in, Th_in
     real, dimension(size(qv_in)) :: Tv            ! [K], virtual temperature
     real, dimension(size(qv_in)) :: H             ! [m] scale height
@@ -97,6 +99,7 @@ contains
         Psfc  = vert_in(1)
         Tsfc  = temp_in(1)
         qvsfc =   qv_in(1)
+        THETAsfc = Tsfc * ( (P0/Psfc)**(R/cp) )
     end if
 
     if (vert_var == 'p' ) then

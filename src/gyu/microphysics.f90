@@ -115,9 +115,11 @@ contains
                                   / radius_boundary(i)   )
         end do
 
-        do k = 1, nz
-            Nr2d(:,k) = Nr
-        end do
+        ! do k = 1, nz
+        !     Nr2d(:,k) = Nr
+        ! end do
+        Nr2d = 0.
+        Nr2d(:,1) = Nr  ! Give distribution at 1st layer
 
     end subroutine conc_dist!}}}
 

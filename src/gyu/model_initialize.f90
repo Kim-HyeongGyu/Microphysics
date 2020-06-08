@@ -17,8 +17,9 @@ contains
         ! Setup vertical info
         call compute_vert_coord( ztop, zbottom, nz, grid_type, &
                                  z_full, z_half, dz)
-        call interpolate_1d( height_in, temp_in, qv_in, w_in, &
-                             z_full, z_half, Prs, T, THETA, qv, W )
+        call interpolate_1d( height_in, temp_in, qv_in, w_in,  &
+                             z_full, z_half, Prs, T, THETA,    &
+                             qv, W, THETA_sfc, qv_sfc          )
 
         ! Setup droplet distribuion
         call initialize_microphysics( radius, radius_boundary, & 

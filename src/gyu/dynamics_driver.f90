@@ -6,21 +6,31 @@ use      error_handler_mod, only: error_mesg
 use         substeping_mod, only: time_substeping
 contains
 
-    subroutine dynamic_driver()
+    subroutine dynamic_driver(tidx)
         implicit none
+        integer, intent(in) :: tidx
+
         integer :: i, n
         integer :: num_substep
         real    :: delta_time
 
         num_substep = 1
         delta_time = dt
+
+        ! For quasi-equilibrium state
+        if (tidx*dt >= w_zero_time) W = 0.
    
         call time_substeping( W, dz, dt, num_substep )
 
         substeping_loop: do n = 1, num_substep, 1
 
-            call compute_advection( dt, W, dz, THETA )
-            call compute_advection( dt, W, dz, qv    )
+            if ( surface_data ) then
+                call compute_advection( dt, W, dz, THETA, THETA_sfc )
+                call compute_advection( dt, W, dz,    qv,    qv_sfc )
+            else
+                call compute_advection( dt, W, dz, THETA )
+                call compute_advection( dt, W, dz,    qv )
+            end if
 
             ! Advect each size of droplet in bins
             drop_loop: do i = 1, nbin, 1
@@ -37,7 +47,7 @@ contains
 
     end subroutine dynamic_driver
 
-    subroutine compute_advection( dt, w_half, dz, C )  ! {{{
+    subroutine compute_advection( dt, w_half, dz, C, Csfc )  ! {{{
     !-- Input
     ! dt     = length of time step
     ! w_half = vertical velocity at half coordinate(nz+1)
@@ -64,10 +74,11 @@ contains
     ! https://rmets.onlinelibrary.wiley.com/doi/epdf/10.1002/qj.2016
 
     implicit none
-    real,                  intent(in   ) :: dt
-    real,    dimension(:), intent(in   ) :: w_half
-    real,    dimension(:), intent(in   ) :: dz
-    real,    dimension(:), intent(inout) :: C
+    real,               intent(in   ) :: dt
+    real, dimension(:), intent(in   ) :: w_half
+    real, dimension(:), intent(in   ) :: dz
+    real, dimension(:), intent(inout) :: C
+    real, optional,     intent(in   ) :: Csfc
 
     integer :: k, kk
     integer :: ks, ke, kstart, kend
@@ -109,6 +120,11 @@ contains
         flux(ke+1) = 0.
     else
         flux(ks)   = w_half(ks)*C(ks)
+        flux(ke+1) = w_half(ke+1)*C(ke)
+    end if
+
+    if ( present(Csfc) ) then
+        flux(ks)   = w_half(ks)*Csfc
         flux(ke+1) = w_half(ke+1)*C(ke)
     end if
 

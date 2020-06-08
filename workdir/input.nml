@@ -1,8 +1,8 @@
 ! Namelist for 1D box model
 
 &main_nml
-    dt            = 10,      ! time step [s]
-    nt            = 100      ! iteration number of time
+    dt            =    1,    ! [s] time step
+    nt            = 1800,    ! [#] iteration number of time
 /
 
 &data_nml
@@ -10,7 +10,7 @@
     header_data   = 1,       ! header rows from input data
     surface_data  = .true.,  ! 1st line is surface data 
     w_from_data   = .false., ! .true.: vertical wind data is exist
-    w_speed       = 1.0,     ! [m s-1]
+    w_speed       = 0.5,     ! [m s-1]
     pres_units    = "hPa",   ! [hPa](default), [Pa] Pressure units
     temp_units    = "K",     ! [K](default), [C] temperature units
     qv_units      = "kg/kg", ! [kg/kg](default), [g/kg] mixing ratio units
@@ -22,6 +22,7 @@
     nz            = 40,      ! [#] Number of vertical grid
     ztop          = 2000,    ! [m] Model top
     grid_type     = 1,       ! 1: constant, 2: stretching
+    w_zero_time   = 1200,    ! [s] Time at w = 0
     dyn_adv_scheme= 3        ! 0: No advection, 1: finite difference, 
                              ! 2: finite volume, 3: PPM, 4: Lin
 /
@@ -35,6 +36,6 @@
     dist_type     = 1,       ! 1: Log-normal, 2: Gamma
     Nc            = 1.e+8,   ! [# m-3]
     qc            = 2.e-3,   ! [kg/kg]
-    phy_adv_scheme= 0,       ! 0: no physics, 1: reassign, 2: finite volume, 3: PPM
+    phy_adv_scheme= 1,       ! 0: no physics, 1: reassign, 2: finite volume, 3: PPM
     ventilation_effect = .false.
 /
