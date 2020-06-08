@@ -25,7 +25,7 @@ contains
                               dm_dt(:,k), dmb_dt(:,k) )
 
             num_substep = 1
-            call time_substeping( dm_dt(:,k), dm, dt, num_substep )
+            call time_substeping( dmb_dt(:,k), dm, dt, num_substep )
 
             substeping_loop: do n = 1, num_substep, 1
 
@@ -34,8 +34,8 @@ contains
                                    dm, mass(:,k), Nr(:,k) )
 
                 ! Online Coupling with T and qv
-                dqv(k)   = - sum(dm_dt(:,k)*dt)
-                dTemp(k) = - ( L*dqv(k) )/( rho_liquid*Cp )
+                dqv(k)   = - sum( dm_dt(:,k)*dt )
+                dTemp(k) = - ( L*dqv(k) ) / ( rho_liquid*Cp )
                 qv(k)    = qv(k) + dqv(k)
                 T(k)     = T(k)  + dTemp(k)
 
@@ -69,15 +69,15 @@ contains
         call cal_es_Fk_Fd(temp, Pinit, es, Fk, Fd) 
         e     = Pinit * qv/0.622    ! [hPa] Vapor pressure   
         RH    = (e/es)              ! [%]   Relative humidity
-        ! S     = RH - 1.
-        S     = 0.01
+        S     = RH - 1.
+        ! S     = 0.01              ! Test
 
         Vf = 1.; Vfb = 1.
         if (ventilation_effect) then 
             call ventilation(temp, Pinit, radius, Vf)
             call ventilation(temp, Pinit, radius_boundary, Vfb)
         end if
-        dm_dt  = 4*PI*radius*(1./(Fd+Fk))*S*Vf
+        dm_dt  = 4*PI*radius         *(1./(Fd+Fk))*S*Vf
         dmb_dt = 4*PI*radius_boundary*(1./(Fd+Fk))*S*Vfb
 
     end subroutine conc_growth  !}}}
@@ -242,7 +242,7 @@ contains
                 call compute_advection( dt, dmb_dt, dm, Nr )
 
             case default
-                call error_mesg("Not setup mass_scheme option. &
+                call error_mesg("Not setup phy_adv_scheme option. &
                                  please check input.nml")
         end select
 
@@ -395,7 +395,8 @@ contains
                 end if
                 flux(k) = w_half(k) * Cst
 
-                if (cn > 1.) call error_mesg("Courant number > 1")
+                if (cn > 1.) call error_mesg("Courant number > 1 &
+                                              in physics process")
             end do !}}}
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
@@ -517,7 +518,7 @@ contains
             enddo ! }}}
 
         case default
-            call error_mesg("Not setup diff_method option. &
+            call error_mesg("Not setup physics_driver_mod option. &
                              please check input.nml")
     end select
 
@@ -535,7 +536,7 @@ contains
                 C(k) = C(k) + dC_dt * dt
             end do
         case default
-            call error_mesg("No setup equation form.")
+            call error_mesg("No setup physics equation form.")
     end select
 
     end subroutine compute_advection ! }}}

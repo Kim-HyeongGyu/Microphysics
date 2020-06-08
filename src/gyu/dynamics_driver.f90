@@ -137,7 +137,8 @@ contains
                 end if
                 flux(k) = w_half(k) * Cst
 
-                if (cn > 1.) call error_mesg("Courant number > 1")
+                if (cn > 1.) call error_mesg("Courant number > 1 & 
+                                              in dynamic process")
             end do !}}}
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
@@ -259,7 +260,7 @@ contains
             enddo ! }}}
 
         case default
-            call error_mesg("Not setup diff_method option. &
+            call error_mesg("Not setup dyn_adv_scheme option. &
                              please check input.nml")
     end select
 
@@ -277,7 +278,7 @@ contains
                 C(k) = C(k) + dC_dt * dt
             end do
         case default
-            call error_mesg("No setup equation form.")
+            call error_mesg("No setup dynamic equation form.")
     end select
 
     end subroutine compute_advection ! }}}

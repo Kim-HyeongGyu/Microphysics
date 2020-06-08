@@ -54,7 +54,6 @@ contains
         if ((pres_units .eq. "Pa") .and. (vert_var .eq. "p")) height_in = height_in * 0.01   
         if ( temp_units .eq. "C"   ) temp_in   = temp_in + 273.15
         if (   qv_units .eq. "g/kg") qv_in     = qv_in*0.001   
-        ! TODO: processing surface data
 
         close(99, iostat=io, iomsg=iomsg)
         call file_check(io, iomsg, "CLOSE")

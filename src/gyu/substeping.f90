@@ -12,18 +12,18 @@ contains
         real,               intent(inout) :: dt
         integer,            intent(inout) :: num_substep
 
+        real, dimension(size(W)) :: dz_1
         real :: courant_number
 
-        if ( size(dz) /= size(W) ) then
-            ! Dynamics substeping
-            ! Note: size(dz) /= size(W), So we use max value of W for calculate
-            ! curant number. Strictly, W must be interpolated as z_full coordinate.
-            courant_number = maxval( dt/dz * maxval(abs(W)) )
-        else
-            ! Physics substeping
-            ! courant_number = maxval( dt/dm * abs(dm_dt) )
-            courant_number = maxval( dt/dz * abs(W) )
-        end if
+        ! Dynamics & Physics substeping
+        ! Note: size(dz) /= size(W), So we use 1st grid at surface
+        ! Original grid  : | dz(1) | dz(2) | dz(3) | ... | dz(nz)   |
+        ! For substeping : | dz(1) | dz(1) | dz(2) | ... | dz(nz-1) | dz(nz) |
+        ! - Dynamic: courant_number = maxval( dt/dz * abs(dz_dt) )
+        ! - Physics: courant_number = maxval( dt/dm * abs(dm_dt) )
+        dz_1(1)  = dz(1)
+        dz_1(2:) = dz(1:)
+        courant_number = maxval( dt/dz * abs(W) )
 
         if (courant_number > 1) then 
             dt = dt / 2.
