@@ -2,7 +2,7 @@
 
 &main_nml
     dt            =    1,    ! [s] time step
-    nt            = 1800,    ! [#] iteration number of time
+    nt            =  100,    ! [#] iteration number of time
 /
 
 &data_nml
@@ -13,7 +13,7 @@
     w_speed       = 0.5,     ! [m s-1]
     pres_units    = "hPa",   ! [hPa](default), [Pa] Pressure units
     temp_units    = "K",     ! [K](default), [C] temperature units
-    qv_units      = "kg/kg", ! [kg/kg](default), [g/kg] mixing ratio units
+    qv_units      = "g/kg", ! [kg/kg](default), [g/kg] mixing ratio units
     vert_var      = "z",     ! p[hPa] or z[m] , p = pressure
     temp_var      = "theta"  ! T[k] or theta[K] 
 /
@@ -34,8 +34,8 @@
     rratio        = 1.258925,
     nbin          = 100,
     dist_type     = 1,       ! 1: Log-normal, 2: Gamma
-    Nc            = 1.e+8,   ! [# m-3]
-    qc            = 2.e-3,   ! [kg/kg]
-    phy_adv_scheme= 1,       ! 0: no physics, 1: reassign, 2: finite volume, 3: PPM
+    Nc            = 5.e+7,   ! [# m-3]
+    qc            = 2.e-6,   ! [kg/kg]
+    phy_adv_scheme= 3,       ! 0: no physics, 1: reassign, 2: finite volume, 3: PPM
     ventilation_effect = .false.
 /
