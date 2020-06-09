@@ -398,8 +398,9 @@ contains
                 end if
                 flux(k) = w_half(k) * Cst
 
-                if (cn > 1.) call error_mesg("Courant number > 1 &
-                                              in physics process")
+                ! TODO: Test courant error while substeping ...
+                ! if (cn > 1.) call error_mesg("Courant number > 1 &
+                !                               in physics process")
             end do !}}}
 
         ! 3) Piecewise Parabolic Method, Colella and Woodward (1984) {{{
