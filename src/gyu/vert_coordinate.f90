@@ -100,6 +100,9 @@ contains
         Tsfc  = temp_in(1)
         qvsfc =   qv_in(1)
         THETAsfc = Tsfc * ( (P0/Psfc)**(R/cp) )
+    else
+        ! Assumption: surface pressure = 1000 [hPa]
+        Psfc  = P0
     end if
 
     if (vert_var == 'p' ) then
