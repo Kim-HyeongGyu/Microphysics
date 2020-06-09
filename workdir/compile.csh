@@ -16,6 +16,7 @@ set modules  = (         global.f90 \
                model_initialize.f90 \
                      substeping.f90 \
                 dynamics_driver.f90 \
+                      collision.f90 \
                  physics_driver.f90 )
 
 # =========================== Do not touch below code ========================
