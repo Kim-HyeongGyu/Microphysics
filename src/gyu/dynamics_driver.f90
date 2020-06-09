@@ -13,9 +13,11 @@ contains
         integer :: i, n
         integer :: num_substep
         real    :: delta_time
+        real, dimension(nbin) :: Nr_1st_layer
 
         num_substep = 1
         delta_time = dt
+        Nr_1st_layer = Nr(:,1)
 
         ! For quasi-equilibrium state
         if (tidx*dt >= w_zero_time) W = 0.
@@ -44,6 +46,9 @@ contains
 
         ! Reinit dt
         dt = delta_time 
+
+        ! Reinit distribution for 1st layer
+        Nr(:,1) = Nr_1st_layer
 
     end subroutine dynamic_driver
 

@@ -26,6 +26,9 @@ implicit none
     real :: THETA_sfc                               ! [K] potential temperature
     real :: qv_sfc                                  ! [kg kg] mixing ratio
 
+    ! For collision
+    real :: r0                                      ! [m] mean radius
+
     ! Variables for bins
     real, dimension(  :), allocatable :: radius           ! [m] droplet radius
     real, dimension(  :), allocatable :: radius_boundary  ! [m] radius at boundary
