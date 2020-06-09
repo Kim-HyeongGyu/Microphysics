@@ -4,6 +4,7 @@ use          namelist_mod
 use          constant_mod
 use     error_handler_mod, only: error_mesg
 use        substeping_mod, only: time_substeping
+use         collision_mod, only: coad1d
 contains
 
     subroutine physics_driver(tidx)
@@ -15,9 +16,12 @@ contains
         real    :: delta_time
         real, dimension(nz)   :: dqv
         real, dimension(nz)   :: dTemp
+        real, dimension(nz)   :: qc_
         real, dimension(nbin) :: dm
+        real, dimension(nbin) :: Nr_1st_layer
 
         delta_time = dt
+        Nr_1st_layer = Nr(:,1)
         dm = mass_boundary(2:nbin+1,1) - mass_boundary(1:nbin,1)
 
         vertical_loop: do k = 1, nz 
@@ -32,29 +36,36 @@ contains
             substeping_loop: do n = 1, num_substep, 1
 
                 ! Compute concentration
+                ! TODO: PPM conservation test
                 call compute_conc( dm_dt(:,k), dmb_dt(:,k), &
                                    dm, mass(:,k), Nr(:,k) )
 
-                ! Online Coupling with T and qv
-                dqv(k)   = - sum( dm_dt(:,k)*dt )
-                dTemp(k) = - ( L*dqv(k) ) / ( rho_liquid*Cp )
-                qv(k)    = qv(k) + dqv(k)
-                T(k)     = T(k)  + dTemp(k)
-
-                ! Compute Stochastic Equation part
-                ! TODO: Bott (1998, 2000) - JAS
-                ! call SCE(...)
-                
             end do substeping_loop
 
             ! Reinit dt
             dt = delta_time 
+
+            ! Online Coupling with T and qv
+            dqv(k)   = - sum( dm_dt(:,k)*dt )
+            dTemp(k) = - ( L*dqv(k) ) / ( rho_liquid*Cp )
+            qv(k)    = qv(k) + dqv(k)
+            T(k)     = T(k)  + dTemp(k)
+
+            ! Change unit for collision
+            qc_(k) = sum(Nr(:,k)*mass(:,k)) * rho_liquid ! [kg kg-1] -> [kg m-3]
+
+            ! Compute Stochastic Collision Equation
+            call coad1d( dt, nbin, r0, qc_(k), Nr )
+
+            ! TODO: Sedimentation
 
         end do vertical_loop
 
         ! Convert T[K] to Theta[K] for dynamics process
         THETA(:) = T(:)*((P0/Prs(:))**(R/Cp))
 
+        ! Reinit distribution for 1st layer
+        Nr(:,1) = Nr_1st_layer
 
     end subroutine physics_driver
 
