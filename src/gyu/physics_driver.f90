@@ -27,7 +27,7 @@ contains
                               dm_dt(:,k), dmb_dt(:,k) )
 
             num_substep = 1
-            call time_substeping( dmb_dt(:,k), dm, dt, num_substep )
+            call time_substeping( dm_dt(:,k), dm, dt, num_substep )
 
             substeping_loop: do n = 1, num_substep, 1
 
@@ -79,6 +79,7 @@ contains
             call ventilation(temp, Pinit, radius, Vf)
             call ventilation(temp, Pinit, radius_boundary, Vfb)
         end if
+
         dm_dt  = 4*PI*radius         *(1./(Fd+Fk))*S*Vf
         dmb_dt = 4*PI*radius_boundary*(1./(Fd+Fk))*S*Vfb
 

@@ -19,18 +19,22 @@ contains
         ! Note: size(dz) /= size(W), So we use 1st grid at surface
         ! Original grid  : | dz(1) | dz(2) | dz(3) | ... | dz(nz)   |
         ! For substeping : | dz(1) | dz(1) | dz(2) | ... | dz(nz-1) | dz(nz) |
+        if ( size(W) /= size(dz) ) then
+            dz_1(1)  = dz(1)
+            dz_1(2:) = dz(1:)
+        else
+            dz_1     = dz
+        end if
+
         ! - Dynamic: courant_number = maxval( dt/dz * abs(dz_dt) )
         ! - Physics: courant_number = maxval( dt/dm * abs(dm_dt) )
-        dz_1(1)  = dz(1)
-        dz_1(2:) = dz(1:)
-        courant_number = maxval( dt/dz * abs(W) )
+        courant_number = maxval( dt/dz_1 * abs(W) )
 
         if (courant_number > 1) then 
             dt = dt / 2.
             num_substep = num_substep * 2
             call time_substeping_1d( W, dz, dt, num_substep )
         end if
-        
     end subroutine time_substeping_1d
 
 end module substeping_mod
