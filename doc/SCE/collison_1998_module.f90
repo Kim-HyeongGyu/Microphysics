@@ -12,23 +12,23 @@ implicit none
 contains
 
 subroutine coad1d(dt,rq0,xmw,scal,isw, lmin,x0,x1,imax)
-      implicit none
-      double precision, parameter :: emin = 1.e-9, pi=3.141592654,tmax=3600.
-      integer, parameter :: n=400
-      integer, intent(in)            :: isw
-      double precision, intent(inout):: dt, rq0, xmw, scal
-      double precision               :: dlnr, ax, xn0,xn1,x1,x0,lmin,t,&
-                                        tlmin
-       
-      double precision, dimension(n,n) :: c, ima, ck, ec
-      double precision, dimension(n)   :: g, r, e, rri, eei
-      integer :: i, nt, ij, imax,j
-      !   implicit double precision (a-h,o-z)
-      !common /grid/ g(n),r(n),e(n)
-      !common /cour/ c(n,n),ima(n,n)
-      !common /kern/ ck(n,n),ec(n,n)
-      !dimension rri(n),eei(n)
-      !data emin,pi,tmax/1.e-9,3.141592654,3600./
+    implicit none
+    integer,          intent(in)    :: isw
+    double precision, intent(inout) :: dt, rq0, xmw, scal
+     
+    integer, parameter               :: n=400
+    double precision                 :: dlnr, ax, xn0, xn1 ,x1, &
+                                       x0, lmin, t, tlmin
+    double precision, parameter      :: emin = 1.e-9, pi=3.141592654,tmax=3600.
+    double precision, dimension(n,n) :: c, ima, ck, ec
+    double precision, dimension(n)   :: g, r, e, rri, eei
+    integer :: i, nt, ij, imax,j
+    !   implicit double precision (a-h,o-z)
+    !common /grid/ g(n),r(n),e(n)
+    !common /cour/ c(n,n),ima(n,n)
+    !common /kern/ ck(n,n),ec(n,n)
+    !dimension rri(n),eei(n)
+    !data emin,pi,tmax/1.e-9,3.141592654,3600./
 
 ! dt  : time step (input in sec)
 ! g   : spectral mass distribution (mg/cm**3)
@@ -43,98 +43,101 @@ subroutine coad1d(dt,rq0,xmw,scal,isw, lmin,x0,x1,imax)
 ! scal: scaling factor for calculation of ax, see below
 ! isw : collision kernel: 0 (long), 1 (hall), 2 (golovin)
 ! read input variables
- 
-      rq0=rq0*1.e-04
-      xmw=xmw*1.d-3
-      xn0=4./3.*pi*1000.*exp(log(rq0)*3.)
-      xn1=xmw/xn0
-      dlnr=dlog(2.d0)/(3.*scal)
-      ax=2.d0**(1.0/scal)
-! mass and radius grid
-      e(1)=emin*0.5*(ax+1.)
-      r(1)=1000.*dexp(dlog(3.*e(1)/(4.*pi))/3.)
-      do i=2,n
-         e(i)=ax*e(i-1)
-         r(i)=1000.*dexp(dlog(3.*e(i)/(4.*pi))/3.)
-      enddo
-! initial mass distribution
-      x0=xn1/xn0
-      do i=1,n
-         x1=e(i)
-         g(i)=3.*x1*x1*x0*dexp(-x1/xn0)
-      enddo
-! courant numbers
-      call courant(n,rq0,dlnr,scal,ax,e,g,r, c,ima)
-! kernel
-      call trkern (n,isw,g,r,e, ck, ec)
+                                                    !      _                            
+    rq0  = rq0*1.e-04                               ! rq0: r  [um] -> [cm]  
+    xmw  = xmw*1.d-3                                ! [g m-3] -> [mg cm-3]  
+    xn0  = (4./3.)*pi*1000.*exp(log(rq0)*3.)        ! [mg]                  
+    xn1  = xmw/xn0                                  ! [ cm-3 ]              
+    dlnr = dlog(2.d0)/(3.*scal)                     ! dlnr: dy = ln(alpha/3)
+    ax   = 2.d0**(1.0/scal)                         ! ax:   alpha = 2^(1/2) 
+    
+    ! mass and radius grid
+    e(1) = emin*0.5*(ax+1.)                         ! e: Minimum mass x1=x/2
+    r(1) = 1000.*dexp(dlog(3.*e(1)/(4.*pi))/3.)     ! r: Convert mass [mg] -> radius [um]
+    do i = 2, n                                                                            
+        e(i) = ax*e(i-1)                            ! Equation (4)
+        r(i) = 1000.*dexp(dlog(3.*e(i)/(4.*pi))/3.)
+    enddo
 
+    ! initial mass distribution                     !       _
+    x0 = xn1/xn0                                    ! x0: L/x
+    do i = 1,n
+        x1   = e(i)
+        g(i) = 3.*x1*x1*x0*dexp(-x1/xn0)            ! Equation (2), (25)
+    enddo
 
-! output for plotting
-      do i=1,n
-         rri(i)=min(1.d38,r(i))
-         eei(i)=min(1.d38,e(i))
-      enddo
-      !open (16,file='boplot00.out',status='old')
-      open (16,file='boplot00.out',status='unknown') ! check
-      write (16,6100) rri,eei
- 6100 format (5e16.8)
+    ! courant numbers
+    call courant(n,rq0,dlnr,scal,ax,e,g,r, c,ima)
 
+    ! kernel
+    call trkern (n,isw,g,r,e, ck, ec)
 
-! nt: number of iterations
-      nt=int(tmax/dt)
+    ! output for plotting
+    do i = 1, n
+        rri(i) = min(1.d38,r(i))
+        eei(i) = min(1.d38,e(i))
+    enddo
+    !open (16,file='boplot00.out',status='old')
+    open (16,file='boplot00.out',status='unknown')  ! check
+    write (16,6100) rri,eei
+6100 format (5e16.8)
 
+    ! nt: number of iterations
+    nt = int(tmax/dt)
 
-! multiply kernel with constant timestep and logarithmic grid distance
-      do i=1,n
-      do j=1,n
-         ck(i,j)=ck(i,j)*dt*dlnr
-      enddo
-      enddo
-! time integration
-      tlmin=1.d-6
-      t=1.d-6
-      lmin=0
-      do ij=1,nt
-         t=t+dt
-         tlmin=tlmin+dt
-! collision
-         call coad(n,e,g,r,c,ima,ck, ec)
-! output for plotting
-         if (tlmin.ge.60.) then
-            tlmin=tlmin-60.
-            lmin=lmin+1
-            print *,'time in minutes:',lmin
-            write (16,6100) t,g
-! mass balance
-            x0=0.
-            x1=0.
-            do i=1,n
-               x0=x0+g(i)*dlnr
-               x1=max(x1,g(i))
-               if (dabs(x1-g(i)).lt.1.d-9) imax=i
+    ! multiply kernel with constant timestep and logarithmic grid distance
+    do i = 1, n
+        do j = 1, n
+            ck(i,j) = ck(i,j)*dt*dlnr               ! ck: Kernel, dlnr: delta y
+        enddo
+    enddo
+
+    ! time integration
+    tlmin = 1.d-6                                   ! tlmin: variable for caluclate minute
+    t     = 1.d-6                                   ! t: [s] integrated time
+    lmin  = 0                                       ! lmin: minute time units
+    do ij = 1, nt
+        t     = t + dt
+        tlmin = tlmin + dt
+
+        ! collision
+        call coad(n,e,g,r,c,ima,ck, ec)
+
+        ! output for plotting
+        if ( tlmin >= 60. ) then
+            tlmin = tlmin-60.
+            lmin  = lmin+1
+            print *,'time in minutes:', lmin
+            write (16,6100) t, g
+
+            ! mass balance
+            x0 = 0.; x1 = 0.
+            do i = 1, n
+                x0 = x0 + g(i)*dlnr                 ! Equation (5)
+                x1 = max(x1,g(i))
+                if ( dabs(x1-g(i)) < 1.d-9 ) imax = i
             enddo
             print *,'mass ',x0,'max ',x1,'imax ',imax
-         endif
-      enddo
-      close (16)
-      !close (16, n) ! check
-      stop 'stop coad1d'
+        endif
+    enddo
+    close (16)
+    !close (16, n) ! check
+    stop 'stop coad1d'
 
 end subroutine 
 
 subroutine coad(n,e,g,r,c,ima,ck, ec)
-      integer,intent(in)    :: n
-      double precision, intent(in),dimension(n,n)     :: ck
-      double precision, intent(inout),dimension(n)    :: e, g,r
-      double precision, intent(inout),dimension(n,n)  :: c, ima, ec
-      !common /cour/ c(n,n),ima(n,n)
-      !common /grid/ g(n),r(n),e(n)
-      !common /kern/ ck(n,n),ec(n,n)
+    integer,intent(in)    :: n
+    double precision, dimension(n,n), intent(in)    :: ck
+    double precision, dimension(n),   intent(inout) :: e, g,r
+    double precision, dimension(n,n), intent(inout) :: c, ima, ec
+    !common /cour/ c(n,n),ima(n,n)
+    !common /grid/ g(n),r(n),e(n)
+    !common /kern/ ck(n,n),ec(n,n)
 
-      double precision    :: gmin,x0,gsi,gsj,gsk,gk,x1,flux 
-      integer :: i0,i1,i,j,k, kp
-      data gmin /1.d-60/ 
-
+    integer :: i0, i1, i, j, k, kp
+    double precision :: gmin, x0, gsi, gsj, gsk, gk, x1, flux 
+    data gmin /1.d-60/ 
 
 ! collision subroutine, exponential approach
 !      parameter (n=400)
@@ -145,77 +148,82 @@ subroutine coad(n,e,g,r,c,ima,ck, ec)
 !      data gmin /1.d-60/
 
 
-! lower and upper integration limit i0,i1
-      do i=1,n-1
-         i0=i
-         if (g(i).gt.gmin) go to 2000
-      enddo
- 2000 continue
-      do i=n-1,1,-1
-         i1=i
-         if (g(i).gt.gmin) go to 2010
-      enddo
- 2010 continue
-      do i=i0,i1
-      do j=i,i1
-         k=ima(i,j)
-         kp=k+1
-         x0=ck(i,j)*g(i)*g(j)
-         x0=min(x0,g(i)*e(j))
-         if (j.ne.k) x0=min(x0,g(j)*e(i))
-         gsi=x0/e(j)
-         gsj=x0/e(i)
-         gsk=gsi+gsj
-         g(i)=g(i)-gsi
-         g(j)=g(j)-gsj
-         gk=g(k)+gsk
-         if (gk.gt.gmin) then
-            x1=dlog(g(kp)/gk+1.d-60)
-            flux=gsk/x1*(dexp(0.5*x1)-dexp(x1*(0.5-c(i,j))))
-            flux=min(flux,gk)
-            g(k)=gk-flux
-            g(kp)=g(kp)+flux
-         endif
-      enddo
-      enddo
-      return
+    ! lower and upper integration limit i0,i1
+    do i = 1, n-1
+        i0 = i
+        if ( g(i) > gmin ) go to 2000
+    enddo
+2000 continue
+
+    do i = n-1, 1, -1
+        i1 = i
+        if ( g(i) > gmin ) go to 2010
+    enddo
+2010 continue
+
+    do i = i0, i1
+        do j = i, i1
+            k  = ima(i,j)
+            kp = k+1
+            x0 = ck(i,j)*g(i)*g(j)
+            x0 = min(x0,g(i)*e(j))
+            if (j /= k) x0 = min(x0,g(j)*e(i))
+            gsi  = x0 / e(j)
+            gsj  = x0 / e(i)
+            gsk  = gsi + gsj
+            g(i) = g(i) - gsi
+            g(j) = g(j) - gsj
+            gk   = g(k) + gsk
+
+            if ( gk > gmin ) then
+                x1    = dlog( g(kp) / gk+1.d-60 )
+                flux  = gsk / x1*( dexp(0.5*x1)-dexp(x1*(0.5-c(i,j))) )
+                flux  = min( flux, gk )
+                g(k)  = gk - flux
+                g(kp) = g(kp) + flux
+            endif
+        enddo
+    enddo
+
+    return
 end subroutine coad
 
 
 subroutine courant (n,rq0,dlnr,scal,ax,e,g,r, c,ima)
-      integer, intent(in)              :: n
-      double precision, intent(in)                 :: rq0, dlnr, scal,ax
-      double precision, intent(in),dimension(n)    :: e, g,r
-      double precision, intent(out),dimension(n,n) :: c, ima
+    integer, intent(in)              :: n
+    double precision, intent(in)                 :: rq0, dlnr, scal, ax
+    double precision, intent(in),dimension(n)    :: e, g, r
+    double precision, intent(out),dimension(n,n) :: c, ima
     
-      integer            :: i,j,k, kk
-      double precision   :: x0  
-      !implicit double precision (a-h,o-z)
-      !common /const/ rq0,dlnr,scal,ax
-      !common /cour/ c(n,n),ima(n,n)
-      !common /grid/ g(n),r(n),e(n)
-      do i=1,n
-      do j=i,n
-         x0=e(i)+e(j)
-         do k=j,n
-            if (e(k).ge.x0.and.e(k-1).lt.x0) then
-               if (c(i,j).lt.1.-1.d-08) then
-                  kk=k-1
-                  c(i,j)=dlog(x0/e(k-1))/(3.d0*dlnr)
-               else
-                  c(i,j)=0.
-                  kk=k
-               endif
-               ima(i,j)=min(n-1,kk)
-               go to 2000
-            endif
-         enddo
- 2000    continue
-         c(j,i)=c(i,j)
-         ima(j,i)=ima(i,j)
-      enddo
-      enddo
-      return
+    integer            :: i, j, k, kk
+    double precision   :: x0  
+    !implicit double precision (a-h,o-z)
+    !common /const/ rq0,dlnr,scal,ax
+    !common /cour/ c(n,n),ima(n,n)
+    !common /grid/ g(n),r(n),e(n)
+    do i = 1, n
+        do j = i, n
+            x0 = e(i) + e(j)
+            do k = j, n
+                if ( (e(k) >= x0) .and. (e(k-1) < x0) ) then
+                    if ( c(i,j) < (1.-1.d-08) ) then
+                        kk     = k-1
+                        c(i,j) = dlog( x0/e(k-1) ) / ( 3.d0*dlnr )
+                    else
+                        c(i,j) = 0.
+                        kk     = k
+                    endif
+                    ima(i,j) = min(n-1,kk)
+                    go to 2000
+                endif
+            enddo
+        2000 continue
+            c(j,i)   = c(i,j)
+            ima(j,i) = ima(i,j)
+        enddo
+    enddo
+
+    return
 end subroutine
 
 
