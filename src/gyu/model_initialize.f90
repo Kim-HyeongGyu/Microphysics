@@ -8,6 +8,7 @@ use        microphysics_mod, only: initialize_microphysics
 contains
 
     subroutine model_initialize()
+        implicit none
 
         call read_namelist()
 
@@ -24,7 +25,7 @@ contains
         ! Setup droplet distribuion
         call initialize_microphysics( radius, radius_boundary, & 
                                       mass, mass_boundary,     & 
-                                      Nr, dm_dt, dmb_dt        )   
+                                      Nr, dm_dt, dmb_dt, r0    )   
 
         call write_model_setup_info()
 

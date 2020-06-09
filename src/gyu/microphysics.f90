@@ -5,7 +5,7 @@ use     error_handler_mod, only: error_mesg
 contains
     subroutine initialize_microphysics( radius, radius_boundary, &
                                         mass, mass_boundary,     & 
-                                        Nr, dm_dt, dmb_dt )
+                                        Nr, dm_dt, dmb_dt, r0 )
         real, dimension(  :), allocatable, intent(out) :: radius         
         real, dimension(  :), allocatable, intent(out) :: radius_boundary
         real, dimension(:,:), allocatable, intent(out) :: mass           
@@ -13,9 +13,10 @@ contains
         real, dimension(:,:), allocatable, intent(out) :: Nr             
         real, dimension(:,:), allocatable, intent(out) :: dm_dt
         real, dimension(:,:), allocatable, intent(out) :: dmb_dt
+        real,                              intent(out) :: r0
 
         call make_bins(radius, radius_boundary, mass, mass_boundary)
-        call conc_dist(Nc, qc, radius, radius_boundary, Nr)
+        call conc_dist(Nc, qc, radius, radius_boundary, Nr, r0)
 
         allocate( dm_dt(nbin  ,nz))
         allocate(dmb_dt(nbin+1,nz))
@@ -59,15 +60,16 @@ contains
 
     end subroutine make_bins    !}}}
 
-    subroutine conc_dist(Nc, qc, radius, radius_boundary, Nr2d) !{{{
+    subroutine conc_dist(Nc, qc, radius, radius_boundary, Nr2d, r0) !{{{
         implicit none
         real,                              intent( in) :: Nc, qc
         real, dimension(:  ),              intent( in) :: radius
         real, dimension(:  ),              intent( in) :: radius_boundary
         real, dimension(:,:), allocatable, intent(out) :: Nr2d
+        real,                              intent(out) :: r0
 
         integer :: i, k
-        real :: u, std, lambda, N0, r0
+        real :: u, std, lambda, N0
         real :: umul, r0_max
         real, dimension(nbin) :: Nr ! Initial number of droplet
         real, dimension(nbin) :: m  ! mass
@@ -84,9 +86,10 @@ contains
                 r0  = 1.e-5
                 r0_max = ( qc / (Nc*rho_liquid*(4./3.)*pi) )**(1./3.)
                 if (r0 > r0_max) then
-                    r0 = r0_max/2.
-                    print*,"Note! r0 > r0_max"
-                    print*,"r0 will be changed to => ", r0
+                    ! print*, "Note! r0 > r0_max"
+                    ! print*, "r0: ", r0, ",  ", "r0_max: ", r0_max
+                    r0 = r0_max*0.9
+                    ! print*, "r0 will be changed to => ", r0
                 end if    
 
                 u   = log(r0)
@@ -104,6 +107,7 @@ contains
                             * lambda*(lambda*radius)**u &
                             * exp(-lambda*radius)*dr
                 m      = Nr*rho_liquid*pi*(4./3.)*radius**3.
+                r0     = u / lambda
 
             case default
                 call error_mesg("Not setup dist_type option. &
