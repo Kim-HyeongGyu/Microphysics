@@ -13,7 +13,7 @@
 ; ------------------------------------------------ ;
 
 ; from nml_info.nml
-nt   = 5
+nt   = 100
 nz   = 40
 nbin = 100
 fout = "processed_model.nc"
@@ -64,22 +64,26 @@ bin = ispan(1, nbin, 1)
 bin_b = ispan(0, nbin, 1)
 
 radius!0 = "radius"
+radius&radius = radius
 radius@long_name = "droplet radius"
 radius@units = "m"
 
 radius_boundary!0 = "radius_boundary"
+radius_boundary&radius_boundary = radius_boundary
 radius_boundary@long_name = "droplet radius at boundary"
 radius_boundary@units = "m"
 
-mass!0 = "radius"
+mass!0 = "z_full"
 mass!1 = "bin"
+mass&z_full = z_full
 mass@long_name = "droplet radius"
-mass@units = "m"
+mass@units = "kg"
 
-mass_boundary!0 = "radius_boundary"
+mass_boundary!0 = "z_full"
 mass_boundary!1 = "bin_b"
+mass_boundary&z_full = z_full
 mass_boundary@long_name = "droplet radius at boundary"
-mass_boundary@units = "m"
+mass_boundary@units = "kg"
 
 Prs!0 = "time"
 Prs!1 = "z_full"
@@ -113,7 +117,7 @@ Nr&time = time
 Nr&z_full = z_full
 Nr&bin    = bin
 Nr@long_name = "Number of droplets"
-Nr@units = "# m-3 (Maybe?)"
+Nr@units = "# m-3"
 
 copy_VarCoords(Nr, dm_dt)
 dm_dt@long_name = "Tendency of mass"
@@ -122,7 +126,7 @@ dm_dt@units = "kg s-1"
 copy_VarCoords(Nr(:,:,0), dmb_dt(:,:,0))
 dmb_dt!2 = "bin_b"
 dmb_dt&bin_b = bin_b
-dmb_dt@long_name = "Tendency of mass"
+dmb_dt@long_name = "Tendency of mass at boundary"
 dmb_dt@units = "kg s-1"
 
 system("rm -f "+fout)
@@ -131,8 +135,8 @@ fc = addfile(fout, "c")
 ; fc->time            = time
 ; fc->z_full          = z_full
 ; fc->z_half          = z_half
-; fc->radius          = radius
-; fc->radius_boundary = radius_boundary
+fc->radius          = radius
+fc->radius_boundary = radius_boundary
 fc->mass            = mass
 fc->mass_boundary   = mass_boundary   
 fc->Prs             = Prs             
