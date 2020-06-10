@@ -449,7 +449,7 @@ contains
             C_left (ke) = C(ke) - 0.5*slp(ke)
             C_right(ke) = C(ke) + 0.5*slp(ke)
 
-            if (dyn_adv_scheme == 4) then
+            if (phy_adv_scheme == 4) then
                 ! limiters from Lin (2003), Equation 6 (relaxed constraint)
                 do k = ks, ke
                 C_left (k) = C(k) - sign( min(abs(slp(k)),       &
@@ -535,7 +535,7 @@ contains
             enddo ! }}}
 
         case default
-            call error_mesg("Not setup physics_driver_mod option. &
+            call error_mesg("Not setup phy_adv_scheme option. &
                              please check input.nml")
     end select
 
@@ -543,7 +543,8 @@ contains
     select case (eqn_form)
         case ("FLUX_FORM")
             do k = ks, ke
-                dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
+                ! dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
                 C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")
