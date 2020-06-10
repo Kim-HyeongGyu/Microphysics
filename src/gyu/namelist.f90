@@ -128,6 +128,7 @@ contains
         write(10,*) " dist_type          = ", dist_type
         write(10,*) " phy_adv_scheme     = ", phy_adv_scheme
         write(10,*) " ventilation_effect = ", ventilation_effect
+        write(10,*) " collision_effect   = ", collision_effect
         
         close(10)
     end subroutine write_model_setup_info   ! }}}
