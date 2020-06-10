@@ -32,6 +32,7 @@ real    :: w_speed = 0.5                   ! [m s-1] vertical wind speed
 real    :: w_zero_time = -1                ! [s] Time at zero vertical wind
 
 logical :: ventilation_effect = .false.    ! ventilation effect
+logical :: collision_effect   = .false.    ! collision effect
 logical :: surface_data       = .false.
 logical :: w_from_data        = .false.
 ! Note! if surface_data = .true. 
@@ -48,33 +49,34 @@ character(len=10) :: temp_var
 contains
 
     subroutine read_namelist()  ! {{{
-        namelist /main_nml/     dt,             &
+        namelist /main_nml/     dt,                 &
                                 nt
-        namelist /data_nml/     file_name,      &
-                                header_data,    &
-                                surface_data,   &
-                                w_from_data,    &
-                                pres_units,     &
-                                temp_units,     &
-                                w_speed,        &
-                                qv_units,       & 
-                                vert_var,       &
+        namelist /data_nml/     file_name,          &
+                                header_data,        &
+                                surface_data,       &
+                                w_from_data,        &
+                                pres_units,         &
+                                temp_units,         &
+                                w_speed,            &
+                                qv_units,           & 
+                                vert_var,           &
                                 temp_var
-        namelist /dynamics_nml/ nz,             &
-                                ztop,           &
-                                grid_type,      &
-                                w_zero_time,    &
+        namelist /dynamics_nml/ nz,                 &
+                                ztop,               &
+                                grid_type,          &
+                                w_zero_time,        &
                                 dyn_adv_scheme
-        namelist /physics_nml/  drop_var,       &
-                                rmin,           &
-                                rmax,           &
-                                rratio,         &
-                                nbin,           &
-                                Nc,             &
-                                qc,             &
-                                dist_type,      &
-                                phy_adv_scheme, &
-                                ventilation_effect
+        namelist /physics_nml/  drop_var,           &
+                                rmin,               &
+                                rmax,               &
+                                rratio,             &
+                                nbin,               &
+                                Nc,                 &
+                                qc,                 &
+                                dist_type,          &
+                                phy_adv_scheme,     &
+                                ventilation_effect, &
+                                collision_effect
 
         open  (unit = 8, file = 'input.nml', delim = 'apostrophe')
         read  (unit = 8, nml  = main_nml) 

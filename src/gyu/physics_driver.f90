@@ -55,7 +55,9 @@ contains
             qc_(k) = sum(Nr(:,k)*mass(:,k)) * rho_liquid ! [kg kg-1] -> [kg m-3]
 
             ! Compute Stochastic Collision Equation
-            call coad1d( dt, nbin, r0, qc_(k), Nr )
+            if ( collision_effect )  then
+                call coad1d( dt, nbin, r0, qc_(k), Nr )
+            end if
 
             ! TODO: Sedimentation
 
