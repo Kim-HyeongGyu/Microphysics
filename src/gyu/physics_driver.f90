@@ -46,7 +46,7 @@ contains
             dt = delta_time 
 
             ! Online Coupling with T and qv
-            dqv(k)   = - sum( dm_dt(:,k)*dt )
+            dqv(k)   = - sum( dm_dt(:,k)*Nr(:,k) ) * dt
             dTemp(k) = - ( L*dqv(k) ) / ( rho_liquid*Cp )
             qv(k)    = qv(k) + dqv(k)
             T(k)     = T(k)  + dTemp(k)
@@ -104,7 +104,7 @@ contains
         real, intent(out) :: es, Fk, Fd
         
         ! Refer to Rogers & Yau (1996), 16p - (2.17)
-        es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 ))
+        es = 6.112 * exp(( 17.67*(temp-273.15) )/( (temp-273.15)+243.5 )) ! [mb]
         ! To calculate Fd, need to convert the units of 'es'. :: [hPa] > [J m-3]
 
         ! Refer to Rogers & Yau (1996), 103p - Table 7.1 caption,
