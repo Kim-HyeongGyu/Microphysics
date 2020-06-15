@@ -25,6 +25,7 @@ contains
         dm = mass_boundary(2:nbin+1,1) - mass_boundary(1:nbin,1)
 
         vertical_loop: do k = 1, nz 
+            dqv(k) = sum( mass(:,k)*Nr(:,k) )
 
             ! Calculate mass tendency
             call conc_growth( T(k), qv(k), Prs(k),    & 
@@ -46,7 +47,8 @@ contains
             dt = delta_time 
 
             ! Online Coupling with T and qv
-            dqv(k)   = - sum( dm_dt(:,k)*Nr(:,k) ) * dt
+            ! dqv(k)   = - sum( dm_dt(:,k)*Nr(:,k) ) * dt
+            dqv(k)   = - ( sum( (mass(:,k)*Nr(:,k)) ) - dqv(k) )
             dTemp(k) = - ( L*dqv(k) ) / ( rho_liquid*Cp )
             qv(k)    = qv(k) + dqv(k)
             T(k)     = T(k)  + dTemp(k)
@@ -543,8 +545,7 @@ contains
     select case (eqn_form)
         case ("FLUX_FORM")
             do k = ks, ke
-                ! dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
-                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
+                dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
                 C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")
