@@ -541,11 +541,13 @@ contains
                              please check input.nml")
     end select
 
+
     ! vertical advective tendency
     select case (eqn_form)
         case ("FLUX_FORM")
             do k = ks, ke
-                dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
+                !dC_dt     = - ( flux(k+1) - flux(k) ) / dz(k)
+                dC_dt     = - ( flux(k+1)/dz(k+1) - flux(k)/dz(k) )
                 C(k) = C(k) + dC_dt * dt
             end do
         case ("ADVECTIVE_FORM")
