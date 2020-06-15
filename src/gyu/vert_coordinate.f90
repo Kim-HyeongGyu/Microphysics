@@ -83,6 +83,7 @@ contains
     integer                      :: i, j, k
     real                         :: d1, d2
     real                         :: Psfc, Tsfc, qvsfc, THETAsfc
+    real                         :: dz_in, dp_in
     real, dimension(size(qv_in)) :: z_in, P_in, T_in, Th_in
     real, dimension(size(qv_in)) :: Tv            ! [K], virtual temperature
     real, dimension(size(qv_in)) :: H             ! [m] scale height
@@ -120,14 +121,23 @@ contains
         z_in  = -H*(log(P_in/Psfc))
     else
         if (temp_var == 'theta' ) then  ! input data : z[m] & theta[K]
-            print*, "Note! We assumed that Scale height(H) is 8 [km]"
-            H     = 8000.
+             z_in = vert_in
             Th_in = temp_in
-            z_in  = vert_in
-            if (surface_data) z_in(1) = 0
-            P_in  = Psfc*exp(-(z_in/H))
-            T_in  = Th_in*( (P_in/P0)**(R/Cp) )
-            if (surface_data) T_in(1) = Tsfc
+            if (surface_data) then
+                P_in(1) = Psfc 
+                T_in(1) = Tsfc
+                z_in(1) = 0.
+            endif
+            do i = 2, size(qv_in)
+                if ( i .eq. 2) then
+                    dz_in = vert_in(i) - 0. ! vert_in(1) = 0 m
+                else
+                    dz_in = vert_in(i) - vert_in(i-1)
+                endif
+                dp_in = - (( (P_in(i-1)*g) / (R*T_in(i-1)) ) * dz_in )
+                P_in(i) = P_in(i-1) + dp_in 
+                T_in(i) = Th_in(i)*((P_in(i)/P0)**(R/Cp))
+            enddo
         else                            ! input data : z[m] & T[K]
             T_in = temp_in
             z_in = vert_in
